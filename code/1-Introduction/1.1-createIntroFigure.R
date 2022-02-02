@@ -41,4 +41,4 @@ all_data %>%
   ylab(label = "Outcome")+
   theme_classic()
 
-ggsave()
+ggsave(file = "~/Dropbox/BCPaperReplication/figures/intro_figure.pdf", width = 8, height = 5)
