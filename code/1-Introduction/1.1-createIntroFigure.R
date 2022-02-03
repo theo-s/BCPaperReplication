@@ -46,40 +46,40 @@ for (mtry in c(10,5,3,1)) {
   all_data <- cbind(all_data, mean_preds)
 }
 
-colnames(all_data) <- c("x", "Truth","mtry=10","mtry=5","mtry=3","mtry=1")
+colnames(all_data) <- c("x", "Truth","mtry=1","mtry=.5","mtry=.3","mtry=.1")
 
 # Now see the RF fit
 all_data %>%
   melt(id = "x") %>%
   dplyr::rename(Legend = variable, Truth = value) %>%
-  mutate(Legend = as.character(Legend)) %>%
-  ggplot(aes(x = x, y = Truth, color = Legend, linetype = Legend,
-             size = Legend, alpha = Legend)) +
+  mutate(`mtry Fraction` = as.character(Legend)) %>%
+  ggplot(aes(x = x, y = Truth, color = `mtry Fraction`, linetype = `mtry Fraction`,
+             size = `mtry Fraction`, alpha = `mtry Fraction`)) +
   geom_line() +
   scale_linetype_manual(values = c("Truth" = "dashed",
-                                   "mtry=10" = "solid",
-                                   "mtry=5" = "solid",
-                                   "mtry=3" = "solid",
-                                   "mtry=1" = "solid")) +
-  scale_size_manual(values = c("Truth" = .5,
-                               "mtry=10" = .7,
-                               "mtry=5" = .7,
-                               "mtry=3" = .7,
-                               "mtry=1" = .7)) +
+                                   "mtry=1" = "solid",
+                                   "mtry=.5" = "solid",
+                                   "mtry=.3" = "solid",
+                                   "mtry=.1" = "solid")) +
+  scale_size_manual(values = c("Truth" = .9,
+                               "mtry=1" = .7,
+                               "mtry=.5" = .7,
+                               "mtry=.3" = .7,
+                               "mtry=.1" = .7)) +
   scale_color_manual(values = c("Truth" = "black",
-                                "mtry=10" = "blue",
-                                "mtry=5" = "green",
-                                "mtry=3" = "red",
-                                "mtry=1" = "orange")) +
+                                "mtry=1" = "blue",
+                                "mtry=.5" = "green",
+                                "mtry=.3" = "red",
+                                "mtry=.1" = "orange")) +
   scale_alpha_manual(values = c("Truth" = 1,
-                                "mtry=10"= .6,
-                                "mtry=5" = .6,
-                                "mtry=3" = .6,
-                                "mtry=1" = .6)) +
+                                "mtry=1"= .6,
+                                "mtry=.5" = .6,
+                                "mtry=.3" = .6,
+                                "mtry=.1" = .6)) +
   xlab(label = "X1")+
   ylab(label = "Outcome")+
   theme_classic()
 
-ggsave(file = paste0("~/Dropbox/BCPaperReplication/figures/intro_mtry.pdf"), width = 5, height = 3,
+ggsave(file = paste0("~/Dropbox/BCPaperReplication/figures/intro_mtry.pdf"), width = 5.5, height = 3,
        dpi = 800)
 
