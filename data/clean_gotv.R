@@ -55,4 +55,4 @@ any(duplicated(lapply(train_data, digest)))
 print(nrow(train_data))
 print(ncol(train_data))
 
-saveRDS(object = train_data, file = "data/gotv.RDS")
+saveRDS(object = train_data, file = "data/gotvBIG.RDS")
