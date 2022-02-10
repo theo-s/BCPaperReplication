@@ -1,7 +1,0 @@
-install.packages("data.table","bartMachine")
-library(bartMachine)
-library(cfcausal)
-library(causalToolbox)
-library(Rforestry)
-library(grf)
-library(data.table)
