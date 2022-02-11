@@ -83,19 +83,38 @@ saveRDS(object = social, file = "data/gotv_Test.RDS")
 saveForestry(forest.control, filename = "data/gotv_forest_control.Rda")
 saveForestry(forest.treat, filename = "data/gotv_forest_treat.Rda")
 
+
+
 # Data set 3: transphobia data set using T Learners as the true outcomes =======
-transphobia <- readRDS("data/cleaned_transphobia.rds")
+tra <- readRDS("data/cleaned_transphobia.rds")
 
 # Cleaning is the same as done in the X Learner paper, see data/clean_transphobia.R
 # for details and data/transphobia.rda for the raw data
+mean(tra$Y[tra$Tr == 1]) - mean(tra$Y[tra$Tr == 0])
 
 
+forest.treat <- forestry(
+  x = tra %>% filter(Tr == 1) %>% dplyr::select(-Tr,-Y),
+  y = tra %>% filter(Tr == 1) %>% dplyr::select(Y) %>% .[,1],
+  ntree = 1000,
+  seed = 11
+)
 
+forest.control <- forestry(
+  x = tra %>% filter(Tr == 0) %>% dplyr::select(-Tr,-Y),
+  y = tra %>% filter(Tr == 0) %>% dplyr::select(Y) %>% .[,1],
+  ntree = 1000,
+  seed = 11
+)
 
+Y0 <- predict(forest.control, newdata = tra %>% dplyr::select(-Tr,-Y))
+Y1 <- predict(forest.treat, newdata = tra %>% dplyr::select(-Tr,-Y))
 
+tra$Y <- ifelse(tra$Tr, Y1,Y0)
+tra$Tau <- Y1 - Y0
 
+saveRDS(object = tra, file = "data/tra_Test.RDS")
 
-
-
-
-
+# Save both base learners
+saveForestry(forest.control, filename = "data/tra_forest_control.Rda")
+saveForestry(forest.treat, filename = "data/tra_forest_treat.Rda")

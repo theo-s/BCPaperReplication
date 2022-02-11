@@ -22,7 +22,7 @@ experiment_list[["Experiment1"]] <- function(
   sample_idx <- sample(1:nrow(train_data), size = n, replace = TRUE)
 
   # Add noise to correspond to the SNR
-  noise_sd <- sqrt(snr) / sd(train_data$Tau)
+  noise_sd <- sd(train_data$Tau) / sqrt(snr)
   train_data$Y <- test_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
 
   return(list("Train" = train_data[sample_idx,], "Test" = test_data))
@@ -38,12 +38,18 @@ experiment_list[["Experiment2"]] <- function(
   set.seed(seed)
 
   # Sample the training data
-  train_data <- readRDS("data/GOTV_Train.RDS")
   test_data <- readRDS("data/GOTV_Test.RDS")
-  sample_idx <- sample(1:nrow(train_data), size = n, replace = TRUE)
+  sample_idx <- sample(1:nrow(test_data), size = n, replace = TRUE)
+
+  train_data <- test_data[sample_idx,]
 
   # Add noise to correspond to the SNR
-  noise_sd <- sqrt(snr) / sd(train_data$Tau)
+  noise_var <- var(train_data$Tau) / snr
+  fn <- function(x) {
+    return(x*(1-x) - noise_var)
+  }
+  noise_p <- optim(par = .5, fn = fn, lower = .01, upper = .99, method = "L-BFGS-B")$value
+
   train_data$Y <- test_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
 
   return(list("Train" = train_data[sample_idx,], "Test" = test_data))
@@ -60,12 +66,12 @@ experiment_list[["Experiment3"]] <- function(
   set.seed(seed)
 
   # Sample the training data
-  train_data <- readRDS("data/TRAN_Train.RDS")
-  test_data <- readRDS("data/TRAN_Test.RDS")
-  sample_idx <- sample(1:nrow(train_data), size = n, replace = TRUE)
+  test_data <- readRDS("data/tra_Test.RDS")
+  sample_idx <- sample(1:nrow(test_data), size = n, replace = TRUE)
+  train_data <- test_data[sample_idx,]
 
   # Add noise to correspond to the SNR
-  noise_sd <- sqrt(snr) / sd(train_data$Tau)
+  noise_sd <- sd(train_data$Tau) / sqrt(snr)
   train_data$Y <- test_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
 
   return(list("Train" = train_data[sample_idx,], "Test" = test_data))
