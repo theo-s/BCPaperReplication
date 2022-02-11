@@ -44,15 +44,22 @@ experiment_list[["Experiment2"]] <- function(
   train_data <- test_data[sample_idx,]
 
   # Add noise to correspond to the SNR
-  noise_var <- var(train_data$Tau) / snr
+  noise_sd <- sd(train_data$Tau) / sqrt(snr)
+  noise_outcome <- rbinom(p = noise_sd, n = nrow(train_data), size = 1)
   fn <- function(x) {
-    return(x*(1-x) - noise_var)
+    if (x == 1) {
+      return(0)
+    } else if (x==0) {
+      return(1)
+    }
   }
-  noise_p <- optim(par = .5, fn = fn, lower = .01, upper = .99, method = "L-BFGS-B")$value
 
-  train_data$Y <- test_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
+  # If that outcome should be noised, we flip the outcome
+  noised_y <- ifelse(noise_outcome == 1, sapply(train_data$Y,fn), train_data$Y)
 
-  return(list("Train" = train_data[sample_idx,], "Test" = test_data))
+  train_data$Y <- noised_y
+
+  return(list("Train" = train_data, "Test" = test_data))
 }
 
 ## Experiment 3 Transphobia data with T Learner full sample estimate as the True Tau
@@ -74,6 +81,6 @@ experiment_list[["Experiment3"]] <- function(
   noise_sd <- sd(train_data$Tau) / sqrt(snr)
   train_data$Y <- test_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
 
-  return(list("Train" = train_data[sample_idx,], "Test" = test_data))
+  return(list("Train" = train_data, "Test" = test_data))
 }
 
