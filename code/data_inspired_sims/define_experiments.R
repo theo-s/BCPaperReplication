@@ -5,8 +5,8 @@
 experiment_list <- list()
 
 
-## Experiment 1 ACIC 2018 Challenge data with synthetic outcomes
-experiment_list[["Experiment1"]] <- function(
+## Ex 1 ACIC 2018 Challenge data with synthetic outcomes
+experiment_list[["Ex1"]] <- function(
   n = 1000,
   seed = 1,
   snr = 1
@@ -17,10 +17,13 @@ experiment_list[["Experiment1"]] <- function(
   set.seed(seed)
 
   # Sample the training data
-  train_data <- readRDS("data/ACIC_Train.RDS")
   test_data <- readRDS("data/ACIC_Test.RDS")
-  sample_idx <- sample(1:nrow(train_data), size = n, replace = TRUE)
+  sample_idx <- sample(1:nrow(test_data), size = n, replace = TRUE)
+  train_data <- test_data[sample_idx,]
 
+  train_data$Y <- ifelse(train_data$Tr,
+                         train_data$Y + train_data$Tau,
+                         train_data$Y)
   # Add noise to correspond to the SNR
   noise_sd <- sd(train_data$Tau) / sqrt(snr)
   train_data$Y <- test_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
@@ -28,9 +31,9 @@ experiment_list[["Experiment1"]] <- function(
   return(list("Train" = train_data[sample_idx,], "Test" = test_data))
 }
 
-## Experiment 2 GOTV Data with the T Learner full sample estimate as the True Tau
-experiment_list[["Experiment2"]] <- function(
-  n = 1000,
+## Ex 2 GOTV Data with the T Learner full sample estimate as the True Tau
+experiment_list[["Ex2"]] <- function(
+  n = 22946,
   seed = 1,
   snr = 1
 ) {
@@ -62,9 +65,9 @@ experiment_list[["Experiment2"]] <- function(
   return(list("Train" = train_data, "Test" = test_data))
 }
 
-## Experiment 3 Transphobia data with T Learner full sample estimate as the True Tau
-experiment_list[["Experiment3"]] <- function(
-  n = 1000,
+## Ex 3 Transphobia data with T Learner full sample estimate as the True Tau
+experiment_list[["Ex3"]] <- function(
+  n = 150,
   seed = 1,
   snr = 1
 ) {

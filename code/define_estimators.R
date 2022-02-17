@@ -6,7 +6,7 @@ library(grf)
 
 estimator_list <- list()
 
-source("define_helpers.R")
+source("code/define_helpers.R")
 
 ## Get counterfactual intervals by S-Learner with RF
 estimator_list[["slearner_none"]] <- function(X, Y, T, Xtest,
@@ -251,21 +251,28 @@ estimator_list[["causalForest"]] <- function(X, Y, T, Xtest,
 ## Get counterfactual intervals by BART
 estimator_list[["bart"]] <- function(X, Y, T, Xtest,
                                      B = 50){
-  Y[T == 0] <- NA # Include this line as it was written in the
-  		  # cfcausal package, this means that BART is only
-		  # trained on the treatment observations, and basically
-		  # assumes the control outcome is zero (which is true in this case)
-		  # This gives BART a huge advantage over RF when RF is trained
-		  # on both cases and has to learn the importance of the
-		  # treatment indicator
-  ids <- !is.na(Y)
+
+  library(bartCause)
   X <- as.data.frame(X)
   Xtest <- as.data.frame(Xtest)
-  fit <- bartMachine::bartMachine(X[ids, ], Y[ids],
-                                  verbose = FALSE)
-  CI_tau <- bartMachine::calc_credible_intervals(fit, new_data = Xtest, ci_conf = 0.95)
-  preds <- predict(fit, new_data = Xtest)
-  return(list(tau = CI_tau, preds = preds))
+  fit <- bartCause::bartc(response = Y,
+                          treatment = T,
+                          confounders = X,
+                          keepTrees = TRUE)
+  # Get predictions for CATE for each test observation
+  preds <- predict(fit, newdata = Xtest, type = "icate")
+
+  # Create credible intervals from 2.5% and 97.5% of the poterior draws
+  CI.lower <- apply(preds, 2, function(x)
+    quantile(x, c(.025)))
+
+  CI.upper <- apply(preds, 2, function(x)
+    quantile(x, c(.975)))
+
+  CI <- data.frame(low = CI.lower,
+                   high = CI.upper)
+
+  return(list(tau = CI, preds = apply(preds, 2, mean)))
 }
 
 
