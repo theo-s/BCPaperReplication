@@ -8,7 +8,6 @@ library(splines)
 library(ggplot2)
 
 source("code/6-Stability/xgb_helper.R")
-estimator_list <- list()
 
 # A helper function that produces bias corrected predictions
 # Takes an object corresponding to the original model,
@@ -126,12 +125,7 @@ GeneralCorrectedPredict <- function(object,
   return(data_test$Ypred_corrected)
 }
 
-data <- iris[1:100,]
 
-fit <- loess(Sepal.Length ~ Petal.Width, data = data)
-
-Xtest = iris[101:150,-1]
-predict(fit, newdata = iris$Petal.Width[1:50])
 
 
 

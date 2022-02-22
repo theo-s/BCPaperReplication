@@ -15,7 +15,7 @@ if (!interactive()){
   seed <- 101
 }
 
-source("define_experiments_breiman.R")
+source("code/define_experiments_breiman.R")
 
 n <- 1000
 
@@ -37,22 +37,32 @@ for (data_i in 1:length(names(experiment_list))) {
   x_train <- data$x
   y_train <- y_func(data, seed)
 
+  method_list = expand.grid(c("none","rf","xgboost","bart"),
+                            c("none","ols","loess","spline"))
 
   # Now train the different models
   rf <- forestry(x = x_train,
                  y = y_train,
                  scale = FALSE,
                  OOBhonest = TRUE,
-                 ntree = 2000
+                 ntree = 1000
   )
 
   filename = paste0("results/Exp",data_i,"seed",seed,".RDS")
-  res <- data.frame(rf = predict(rf, newdata = x_test),
-                    lin = correctedPredict(rf, newdata = x_test),
-                    rflin = correctedPredict(rf, newdata = x_test, nrounds = 1))
+
+  results_df <- data.frame(matrix(data=NA,ncol=nrow(method_list),nrow = nrow(x_test)))
+  colnames(results_df) <- apply(method_list, MARGIN = 1, FUN=function(x){return(paste0(x[1],".",x[2]))})
+
+  for (i in 1:nrow(method_list)) {
+    pred_i <- try(GeneralCorrectedPredict(rf,
+                                          Xtest = x_test,
+                                          method1 = method_list$Var1[i],
+                                          method2 = method_list$Var2[i]))
+    results_df[,i] <- pred_i
+  }
 
   print(paste0("Seed ",seed," Exp ", data_i))
-  print(head(data.frame(res, y_test = y_test)))
+  print(head(data.frame(results_df, y_test = y_test)))
 
-  saveRDS(res, file = filename)
+  saveRDS(results_df, file = filename)
 }
