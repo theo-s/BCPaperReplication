@@ -1,4 +1,5 @@
 library(bartMachine)
+library(dbarts)
 library(cfcausal)
 library(causalToolbox)
 library(Rforestry)
@@ -6,7 +7,7 @@ library(grf)
 library(splines)
 library(ggplot2)
 
-source("6-Stability/xgb_helper.R")
+source("code/6-Stability/xgb_helper.R")
 estimator_list <- list()
 
 # A helper function that produces bias corrected predictions
@@ -50,16 +51,86 @@ GeneralCorrectedPredict <- function(object,
   # get the training X and Y
   Xtrain <- object@processed_dta$processed_x
   Ytrain <- object@processed_dta$y
+  Ytrain_pred <- predict(object, aggregation = "oob")
+  Ytest_pred <- predict(object, Xtest)
 
+  data_train <- data.frame(Ypred = Ytrain_pred, Ypred_corrected = Ytrain_pred)
+  data_test <- data.frame(Ypred = Ytest_pred, Ypred_corrected = Ytest_pred)
 
+  if (method1 == "rf") {
+    # Fit a honest random forest on the training predictions + outcomes and
+    # then predict on Xtest
+    fit <- forestry(x = data.frame(V1 = Ytrain_pred),
+                    y = Ytrain)
+    data_test$Ypred_corrected <- predict(fit,
+                                         newdata = data.frame(V1 = data_test$Ypred))
+    data_train$Ypred_corrected <- predict(fit,
+                                          newdata = data.frame(V1 = data_train$Ypred),
+                                          aggregation = "oob")
+  } else if (method1 == "xgboost") {
+    fit <- helper.xgb(Xobs = data.frame(V1 = Ytrain_pred),
+                      Yobs = Ytrain,
+                      tune_length = grid_length)
 
+    data_test$Ypred_corrected <- pred.xgb(fit,
+                                          newdata = data.frame(V1 = data_test$Ypred))
 
+    data_train$Ypred_corrected <- pred.xgb(fit,
+                                          newdata = data.frame(V1 = data_train$Ypred))
+  } else if (method1 == "bart") {
+    fit <- bart(x.train = data.frame(V1 = Ytrain_pred),
+                y.train = Ytrain,
+                keeptrees = TRUE)
+
+    data_test$Ypred_corrected <- pred.bart(fit,
+                                           newdata = data.frame(V1 = data_test$Ypred))
+
+    data_train$Ypred_corrected <- pred.bart(fit,
+                                            newdata = data.frame(V1 = data_train$Ypred))
+  }
+
+  # Now run the second regression step
+  if (method2 == "ols") {
+    fit <- lm(Y ~ ., data = data.frame(Y = Ytrain, V1=data_train$Ypred_corrected))
+
+    data_test$Ypred_corrected <- predict(fit,
+                                         newdata = data.frame(V1 = data_test$Ypred_corrected))
+
+    data_train$Ypred_corrected <- predict(fit,
+                                          newdata = data.frame(V1 = data_train$Ypred_corrected))
+
+  } else if (method2 == "loess") {
+    fit <- loess(Y ~ ., data = data.frame(Y = Ytrain, V1 = data_train$Ypred_corrected))
+
+    data_test$Ypred_corrected <- predict(fit,
+                                         newdata = data.frame(V1 = data_test$Ypred_corrected))
+
+    data_train$Ypred_corrected <- predict(fit,
+                                          newdata = data.frame(V1 = data_train$Ypred_corrected))
+
+  } else if (method2 == "spline") {
+    # try using 9 knots with equivalent density
+    knots <- unname(quantile(data_train$Ypred_corrected, probs = c(1:9/10)))
+    fit <- lm(Y ~ ns(V1, knots = knots),
+                         data=data.frame(Y = Ytrain,
+                                         V1 = data_train$Ypred_corrected))
+
+    data_test$Ypred_corrected <- unname(predict(fit,
+                                         newdata = data.frame(V1 = data_test$Ypred_corrected)))
+
+    data_train$Ypred_corrected <- unname(predict(fit,
+                                          newdata = data.frame(V1 = data_train$Ypred_corrected)))
+
+  }
+
+  return(data_test$Ypred_corrected)
 }
 
 data <- iris[1:100,]
 
 fit <- loess(Sepal.Length ~ Petal.Width, data = data)
 
+Xtest = iris[101:150,-1]
 predict(fit, newdata = iris$Petal.Width[1:50])
 
 

@@ -23,7 +23,8 @@ helper.xgb <- function(Xobs,
     number = cv_folds,
     ## repeated 4 times
     repeats = 4,
-    allowParallel = FALSE,
+    verboseIter = TRUE,
+    allowParallel = TRUE,
     adaptive = list(
       min = 3,
       alpha = 0.01,
@@ -32,7 +33,7 @@ helper.xgb <- function(Xobs,
     )
   )
 
-  #print("Training XGboost")
+  print("Training XGboost")
   xg_fit <- train(
     y = Yobs,
     x = Xobs,
@@ -59,4 +60,10 @@ helper.xgb <- function(Xobs,
 pred.xgb <- function(estimator, newdata) {
   fit <- estimator[[1]]
   return(predict(fit$finalModel, newdata = as.matrix(newdata)))
+}
+
+pred.bart <- function(estimator, newdata) {
+  s <- predict(estimator, newdata)
+  return(apply(s, 2, mean))
+  #return(s) for now return entire posterior sample
 }
