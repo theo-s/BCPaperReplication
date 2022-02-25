@@ -26,9 +26,9 @@ experiment_list[["Ex1"]] <- function(
                          train_data$Y)
   # Add noise to correspond to the SNR
   noise_sd <- sd(train_data$Tau) / sqrt(snr)
-  train_data$Y <- test_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
+  train_data$Y <- train_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
 
-  return(list("Train" = train_data[sample_idx,], "Test" = test_data))
+  return(list("Train" = train_data, "Test" = test_data))
 }
 
 ## Ex 2 GOTV Data with the T Learner full sample estimate as the True Tau
@@ -41,7 +41,7 @@ experiment_list[["Ex2"]] <- function(
   set.seed(seed)
 
   # Sample the training data
-  test_data <- readRDS("data/GOTV_Test.RDS")
+  test_data <- readRDS("data/gotv_Test.RDS")
   sample_idx <- sample(1:nrow(test_data), size = n, replace = TRUE)
 
   train_data <- test_data[sample_idx,]
@@ -80,9 +80,13 @@ experiment_list[["Ex3"]] <- function(
   sample_idx <- sample(1:nrow(test_data), size = n, replace = TRUE)
   train_data <- test_data[sample_idx,]
 
+  train_data$Y <- ifelse(train_data$Tr,
+                         train_data$Y + train_data$Tau,
+                         train_data$Y)
+
   # Add noise to correspond to the SNR
   noise_sd <- sd(train_data$Tau) / sqrt(snr)
-  train_data$Y <- test_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
+  train_data$Y <- train_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
 
   return(list("Train" = train_data, "Test" = test_data))
 }
