@@ -8,35 +8,67 @@ EstimateCorrectedCATE <- function(theObject,
   # Check if we want to do bias correction predictions
   if (correction == "bc1") {
     return(
-      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1)) -
-        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0))
+      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1),
+                                  params.forestry = list("mtry" = 2),
+                                  feats = c((ncol(feature_new)+1))) -
+        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0),
+                                    params.forestry = list("mtry" = 2),
+                                    feats = c((ncol(feature_new)+1)))
     )
   } else if (correction == "bc2") {
     return(
-      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1), nrounds = 1) -
-        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0), nrounds = 1)
+      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1),
+                                  params.forestry = list("mtry" = 2),
+                                  feats = c((ncol(feature_new)+1)),
+                                  nrounds = 1) -
+        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0),
+                                    params.forestry = list("mtry" = 2),
+                                    feats = c((ncol(feature_new)+1)),
+                                    nrounds = 1)
     )
   } else if (correction == "bc3") {
     return(
-      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1), nrounds = 1, monotone = TRUE) -
-        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0), nrounds = 1, monotone = TRUE)
+      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1), nrounds = 1,
+                                  params.forestry = list("mtry" = 2),
+                                  feats = c((ncol(feature_new)+1)),
+                                  monotone = TRUE) -
+        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0), nrounds = 1,
+                                    params.forestry = list("mtry" = 2),
+                                    feats = c((ncol(feature_new)+1)),
+                                    monotone = TRUE)
     )
   } else if (correction == "bc4") {
     return(
-      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1), simple=FALSE, num_quants = 3) -
-        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0), simple=FALSE, num_quants = 3)
+      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1),
+                                  params.forestry = list("mtry" = 2),
+                                  feats = c((ncol(feature_new)+1)),
+                                  simple=FALSE, num_quants = 3) -
+        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0),
+                                    params.forestry = list("mtry" = 2),
+                                    feats = c((ncol(feature_new)+1)),
+                                    simple=FALSE, num_quants = 3)
     )
   } else if (correction == "bc5") {
     return(
-      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1), nrounds = 1, simple=FALSE, num_quants = 3) -
-        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0), nrounds = 1, simple=TRUE, num_quants = 3)
+      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1), nrounds = 1,
+                                  params.forestry = list("mtry" = 2),
+                                  feats = c((ncol(feature_new)+1)),
+                                  simple=FALSE, num_quants = 3) -
+        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0), nrounds = 1,
+                                    params.forestry = list("mtry" = 2),
+                                    feats = c((ncol(feature_new)+1)),
+                                    simple=TRUE, num_quants = 3)
     )
   } else if (correction == "bc6") {
     return(
       Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1),
-                                  nrounds = 1, monotone = TRUE, simple=FALSE, num_quants = 3) -
+                                  params.forestry = list("mtry" = 2),
+                                  feats = c((ncol(feature_new)+1)),
+                                  nrounds = 1) -
         Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0),
-                                    nrounds = 1, monotone = TRUE, simple=TRUE, num_quants = 3)
+                                    params.forestry = list("mtry" = 2),
+                                    feats = c((ncol(feature_new)+1)),
+                                    nrounds = 1)
     )
   } else {
     return(

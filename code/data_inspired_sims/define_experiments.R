@@ -80,10 +80,6 @@ experiment_list[["Ex3"]] <- function(
   sample_idx <- sample(1:nrow(test_data), size = n, replace = TRUE)
   train_data <- test_data[sample_idx,]
 
-  train_data$Y <- ifelse(train_data$Tr,
-                         train_data$Y + train_data$Tau,
-                         train_data$Y)
-
   # Add noise to correspond to the SNR
   noise_sd <- sd(train_data$Tau) / sqrt(snr)
   train_data$Y <- train_data$Y + rnorm(n = nrow(train_data), sd = noise_sd)
