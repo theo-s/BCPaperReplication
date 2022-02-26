@@ -64,11 +64,11 @@ EstimateCorrectedCATE <- function(theObject,
       Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1),
                                   params.forestry = list("mtry" = 2),
                                   feats = c((ncol(feature_new)+1)),
-                                  nrounds = 1) -
+                                  nrounds = 10) -
         Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0),
                                     params.forestry = list("mtry" = 2),
                                     feats = c((ncol(feature_new)+1)),
-                                    nrounds = 1)
+                                    nrounds = 10)
     )
   } else {
     return(
