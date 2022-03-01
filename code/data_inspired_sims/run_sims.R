@@ -44,6 +44,9 @@ source("code/data_inspired_sims/define_experiments.R")
 es_names <- names(estimator_list)
 data_names <- names(experiment_list)
 
+# The corrections to use for S RF
+correction_types <- c("none", "bc1","bc2","bc6")
+
 exp_names <- list("Ex1" = "ACIC 2018 Data", "Ex2" = "GOTV Data", "Ex3" = "Transphobia data")
 
 msg <- paste0("Running experiment: ", exp_names[[data_names[[experiment_num]]]],
@@ -69,28 +72,58 @@ if (!file.exists(filename) || (force==1)) {
   print(names(train_data))
   print(names(test_data))
 
-  es_cate <- es_func(X = train_data %>% dplyr::select(-Tr,-Y),
-                     T = train_data %>% dplyr::select(Tr) %>% .[,1],
-                     Y = train_data %>% dplyr::select(Y) %>% .[,1],
-                     Xtest = test_data %>% dplyr::select(-Tau),
-                     B=B)
+  if (es_names[estimator] == "s_rf") {
+    es_cate <- es_func(X = train_data %>% dplyr::select(-Tr,-Y),
+                       T = train_data %>% dplyr::select(Tr) %>% .[,1],
+                       Y = train_data %>% dplyr::select(Y) %>% .[,1],
+                       Xtest = test_data %>% dplyr::select(-Tau),
+                       B=B,
+                       corrections = correction_types)
 
-  nrow( test_data %>% dplyr::select(-Tau))
+    nrow( test_data %>% dplyr::select(-Tau))
 
-  coverage <- ifelse(es_cate[["tau"]][,1] <= test_data$Tau,
-                     ifelse(es_cate[["tau"]][,2] >= test_data$Tau,
-                            1
-                            ,0)
-                     ,0)
+    for (correction in correction_types) {
+      cur_filename <- paste0(substr(filename,1,nchar(filename)-4),correction,".RDS")
+      current_result <- es_cate[[correction]]
 
-  result <- list("Pred" = es_cate[["preds"]],
-                 "CI" = es_cate[["tau"]],
-                 "Estimator" = es_names[estimator],
-                 "Experiment" = experiment_num,
-                 "cov" = mean(coverage))
-  saveRDS(object = result, file = filename)
-  print(paste0(result$Experiment," ",result$Estimator," ", result$cov))
+      coverage <- ifelse(current_result[["tau"]][,1] <= test_data$Tau,
+                         ifelse(current_result[["tau"]][,2] >= test_data$Tau,
+                                1
+                                ,0)
+                         ,0)
 
+      result <- list("Pred" = current_result[["preds"]],
+                     "CI" = current_result[["tau"]],
+                     "Estimator" = paste0(es_names[estimator],correction),
+                     "Experiment" = experiment_num,
+                     "cov" = mean(coverage))
+      saveRDS(object = result, file = cur_filename)
+      print(paste0(result$Experiment," ",result$Estimator," ",correction," ", result$cov))
+    }
+
+  } else {
+    es_cate <- es_func(X = train_data %>% dplyr::select(-Tr,-Y),
+                       T = train_data %>% dplyr::select(Tr) %>% .[,1],
+                       Y = train_data %>% dplyr::select(Y) %>% .[,1],
+                       Xtest = test_data %>% dplyr::select(-Tau),
+                       B=B)
+
+    nrow( test_data %>% dplyr::select(-Tau))
+
+    coverage <- ifelse(es_cate[["tau"]][,1] <= test_data$Tau,
+                       ifelse(es_cate[["tau"]][,2] >= test_data$Tau,
+                              1
+                              ,0)
+                       ,0)
+
+    result <- list("Pred" = es_cate[["preds"]],
+                   "CI" = es_cate[["tau"]],
+                   "Estimator" = es_names[estimator],
+                   "Experiment" = experiment_num,
+                   "cov" = mean(coverage))
+    saveRDS(object = result, file = filename)
+    print(paste0(result$Experiment," ",result$Estimator," ", result$cov))
+  }
 
 }
 

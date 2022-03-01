@@ -9,8 +9,10 @@ estimator_list <- list()
 source("code/define_helpers.R")
 
 ## Get counterfactual intervals by S-Learner with RF
-estimator_list[["slearner_none"]] <- function(X, Y, T, Xtest,
-                                              B = 50){
+## The vector corrections contains the corrections to use for the
+## forest. Possible corrections are "none" and "bc1" through "bc6"
+estimator_list[["s_rf"]] <- function(X, Y, T, Xtest,
+                                              B = 500, corrections=c("none")){
   if (B == 0){
     df_tau <- df_Y <- list(cr = NA, len = NA)
     return(list(tau = df_tau, Y1 = df_Y))
@@ -32,208 +34,22 @@ estimator_list[["slearner_none"]] <- function(X, Y, T, Xtest,
                                    middleSplit = FALSE,
                                    OOBhonest = TRUE
                                  ))
-  cate_esti_rf <- EstimateCorrectedCATE(theObject = sl_rf,
-                                        feature_new = Xtest,
-                                        correction = "none")
 
-  CI <- slearner_CI(sl_rf, Xtest, B = B,
-                    verbose = TRUE, nthread = 0,
-                    correction = "none")[, 2:3]
-  return(list(tau = CI, preds = cate_esti_rf))
-}
+  # Loop through the possible corrections
+  return_list <- list()
+  for (correction_type in corrections) {
+    cate_esti_rf <- EstimateCorrectedCATE(theObject = sl_rf,
+                                          feature_new = Xtest,
+                                          correction = correction_type)
 
-## Get counterfactual intervals by S-Learner with RF
-estimator_list[["slearner_bc1"]] <- function(X, Y, T, Xtest,
-                                         B = 50){
-  if (B == 0){
-    df_tau <- df_Y <- list(cr = NA, len = NA)
-    return(list(tau = df_tau, Y1 = df_Y))
+    CI <- slearner_CI(sl_rf, Xtest, B = B,
+                      verbose = TRUE, nthread = 0,
+                      correction = correction_type)[, 2:3]
+
+    return_list[[correction_type]] <- list(tau = CI, preds = cate_esti_rf)
   }
 
-  sl_rf <- causalToolbox::S_RF(feat = X, tr = T, yobs = Y, nthread = 0,
-                               mu.forestry =
-                                 list(
-                                   relevant.Variable = 1:ncol(X),
-                                   ntree = 1000,
-                                   replace = TRUE,
-                                   sample.fraction = 1,
-                                   mtry = ncol(X),
-                                   nodesizeSpl = 5,
-                                   nodesizeAvg = 5,
-                                   nodesizeStrictSpl = 1,
-                                   nodesizeStrictAvg = 1,
-                                   splitratio = 1,
-                                   middleSplit = FALSE,
-                                   OOBhonest = TRUE
-                                 ))
-  cate_esti_rf <- EstimateCorrectedCATE(theObject = sl_rf,
-                                        feature_new = Xtest,
-                                        correction = "bc1")
-
-  CI <- slearner_CI(sl_rf, Xtest, B = B,
-                    verbose = TRUE, nthread = 0,
-                    correction = "bc1")[, 2:3]
-  return(list(tau = CI, preds = cate_esti_rf))
-}
-
-## Get counterfactual intervals by S-Learner with RF
-estimator_list[["slearner_bc2"]] <- function(X, Y, T, Xtest,
-                                         B = 50){
-  if (B == 0){
-    df_tau <- df_Y <- list(cr = NA, len = NA)
-    return(list(tau = df_tau, Y1 = df_Y))
-  }
-
-  sl_rf <- causalToolbox::S_RF(feat = X, tr = T, yobs = Y, nthread = 0,
-                               mu.forestry =
-                                 list(
-                                   relevant.Variable = 1:ncol(X),
-                                   ntree = 1000,
-                                   replace = TRUE,
-                                   sample.fraction = 1,
-                                   mtry = ncol(X),
-                                   nodesizeSpl = 5,
-                                   nodesizeAvg = 5,
-                                   nodesizeStrictSpl = 1,
-                                   nodesizeStrictAvg = 1,
-                                   splitratio = 1,
-                                   middleSplit = FALSE,
-                                   OOBhonest = TRUE
-                                 ))
-  cate_esti_rf <- EstimateCorrectedCATE(sl_rf, Xtest,
-                                              correction = "bc2")
-  CI <- slearner_CI(sl_rf, Xtest, B = B,
-                              verbose = TRUE, nthread = 0,
-                              correction = "bc2")[, 2:3]
-  return(list(tau = CI, preds = cate_esti_rf))
-}
-
-## Get counterfactual intervals by S-Learner with RF
-estimator_list[["slearner_bc3"]] <- function(X, Y, T, Xtest,
-                                             B = 50){
-  if (B == 0){
-    df_tau <- df_Y <- list(cr = NA, len = NA)
-    return(list(tau = df_tau, Y1 = df_Y))
-  }
-
-  sl_rf <- causalToolbox::S_RF(feat = X, tr = T, yobs = Y, nthread = 0,
-                               mu.forestry =
-                                 list(
-                                   relevant.Variable = 1:ncol(X),
-                                   ntree = 1000,
-                                   replace = TRUE,
-                                   sample.fraction = 1,
-                                   mtry = ncol(X),
-                                   nodesizeSpl = 5,
-                                   nodesizeAvg = 5,
-                                   nodesizeStrictSpl = 1,
-                                   nodesizeStrictAvg = 1,
-                                   splitratio = 1,
-                                   middleSplit = FALSE,
-                                   OOBhonest = TRUE
-                                 ))
-  cate_esti_rf <- EstimateCorrectedCATE(sl_rf, Xtest,
-                                              correction = "bc3")
-  CI <- slearner_CI(sl_rf, Xtest, B = B,
-                              verbose = TRUE, nthread = 0,
-                              correction = "bc3")[, 2:3]
-  return(list(tau = CI, preds = cate_esti_rf))
-}
-
-## Get counterfactual intervals by S-Learner with RF
-estimator_list[["slearner_bc4"]] <- function(X, Y, T, Xtest,
-                                             B = 50){
-  if (B == 0){
-    df_tau <- df_Y <- list(cr = NA, len = NA)
-    return(list(tau = df_tau, Y1 = df_Y))
-  }
-
-  sl_rf <- causalToolbox::S_RF(feat = X, tr = T, yobs = Y, nthread = 0,
-                               mu.forestry =
-                                 list(
-                                   relevant.Variable = 1:ncol(X),
-                                   ntree = 1000,
-                                   replace = TRUE,
-                                   sample.fraction = 1,
-                                   mtry = ncol(X),
-                                   nodesizeSpl = 5,
-                                   nodesizeAvg = 5,
-                                   nodesizeStrictSpl = 1,
-                                   nodesizeStrictAvg = 1,
-                                   splitratio = 1,
-                                   middleSplit = FALSE,
-                                   OOBhonest = TRUE
-                                 ))
-  cate_esti_rf <- EstimateCorrectedCATE(sl_rf, Xtest,
-                                              correction = "bc4")
-  CI <- slearner_CI(sl_rf, Xtest, B = B,
-                              verbose = TRUE, nthread = 0,
-                              correction = "bc4")[, 2:3]
-  return(list(tau = CI, preds = cate_esti_rf))
-}
-
-## Get counterfactual intervals by S-Learner with RF
-estimator_list[["slearner_bc5"]] <- function(X, Y, T, Xtest,
-                                             B = 50){
-  if (B == 0){
-    df_tau <- df_Y <- list(cr = NA, len = NA)
-    return(list(tau = df_tau, Y1 = df_Y))
-  }
-
-  sl_rf <- causalToolbox::S_RF(feat = X, tr = T, yobs = Y, nthread = 0,
-                               mu.forestry =
-                                 list(
-                                   relevant.Variable = 1:ncol(X),
-                                   ntree = 1000,
-                                   replace = TRUE,
-                                   sample.fraction = 1,
-                                   mtry = ncol(X),
-                                   nodesizeSpl = 5,
-                                   nodesizeAvg = 5,
-                                   nodesizeStrictSpl = 1,
-                                   nodesizeStrictAvg = 1,
-                                   splitratio = 1,
-                                   middleSplit = FALSE,
-                                   OOBhonest = TRUE
-                                 ))
-  cate_esti_rf <- EstimateCorrectedCATE(sl_rf, Xtest,
-                                        correction = "bc5")
-  CI <- slearner_CI(sl_rf, Xtest, B = B,
-                    verbose = TRUE, nthread = 0,
-                    correction = "bc5")[, 2:3]
-  return(list(tau = CI, preds = cate_esti_rf))
-}
-
-## Get counterfactual intervals by S-Learner with RF
-estimator_list[["slearner_bc6"]] <- function(X, Y, T, Xtest,
-                                             B = 50){
-  if (B == 0){
-    df_tau <- df_Y <- list(cr = NA, len = NA)
-    return(list(tau = df_tau, Y1 = df_Y))
-  }
-
-  sl_rf <- causalToolbox::S_RF(feat = X, tr = T, yobs = Y, nthread = 0,
-                               mu.forestry =
-                                 list(
-                                   relevant.Variable = 1:ncol(X),
-                                   ntree = 1000,
-                                   replace = TRUE,
-                                   sample.fraction = 1,
-                                   mtry = ncol(X),
-                                   nodesizeSpl = 5,
-                                   nodesizeAvg = 5,
-                                   nodesizeStrictSpl = 1,
-                                   nodesizeStrictAvg = 1,
-                                   splitratio = 1,
-                                   middleSplit = FALSE,
-                                   OOBhonest = TRUE
-                                 ))
-  cate_esti_rf <- EstimateCorrectedCATE(sl_rf, Xtest,
-                                        correction = "bc6")
-  CI <- slearner_CI(sl_rf, Xtest, B = B,
-                    verbose = TRUE, nthread = 0,
-                    correction = "bc6")[, 2:3]
-  return(list(tau = CI, preds = cate_esti_rf))
+  return(return_list)
 }
 
 ## Get counterfactual intervals by Causal Forest
