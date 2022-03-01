@@ -37,16 +37,17 @@ estimator_list[["s_rf"]] <- function(X, Y, T, Xtest,
 
   # Loop through the possible corrections
   return_list <- list()
+
+  CI_list <- slearner_CI(sl_rf, Xtest, B = B,
+                    verbose = TRUE, nthread = 0,
+                    correction = corrections)
+
   for (correction_type in corrections) {
     cate_esti_rf <- EstimateCorrectedCATE(theObject = sl_rf,
                                           feature_new = Xtest,
                                           correction = correction_type)
 
-    CI <- slearner_CI(sl_rf, Xtest, B = B,
-                      verbose = TRUE, nthread = 0,
-                      correction = correction_type)[, 2:3]
-
-    return_list[[correction_type]] <- list(tau = CI, preds = cate_esti_rf)
+    return_list[[correction_type]] <- list(tau = CI_list[[correction_type]][,2:3], preds = cate_esti_rf)
   }
 
   return(return_list)

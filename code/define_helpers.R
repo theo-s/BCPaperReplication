@@ -87,7 +87,7 @@ slearner_CI <- function(theObject,
                         B_Second = B,
                         nthread = 0,
                         verbose = TRUE,
-                        correction = "none") {
+                        correction = c("none")) {
   ## shortcuts:
   feat <- theObject@feature_train
   tr <- theObject@tr_train
@@ -120,8 +120,11 @@ slearner_CI <- function(theObject,
 
   # pred_B will contain for each simulation the prediction of each of the B
   # simulaions:
-  pred_B <-
-    as.data.frame(matrix(NA, nrow = nrow(feature_new), ncol = B))
+  pred_B <- list()
+  for (correction_i in correction) {
+    pred_B[[correction_i]] <-
+      as.data.frame(matrix(NA, nrow = nrow(feature_new), ncol = B))
+  }
 
   # S is needed for Efron's smooth bootstrap each column corresponse to one
   # bootstrap sample and each row corresponse to one of the smple indexes
@@ -139,32 +142,37 @@ slearner_CI <- function(theObject,
     # if that is 100 we really cannot fit it and bootstrap
     # seems to be infeasible.
 
-    while (is.na(pred_B[1, b])) {
+    while (is.na(pred_B[[1]][1, b])) {
       if (went_wrong == 100)
         stop("one of the groups might be too small to
                do valid inference.")
       S[, b] <- rep(0, nrow(S))
 
-      pred_B[, b] <-
+
         tryCatch({
           bs <- createbootstrappedData()
 
           counts <- table(bs$smpl)
           S[names(counts), b] <- counts
 
-
           withCallingHandlers(
             # this is needed such that bootstrapped warnings are only
             # printed once
-            EstimateCorrectedCATE(
-              creator(
-                feat = bs$feat_b,
-                tr = bs$tr_b,
-                yobs = bs$yobs_b
-              ),
-              feature_new = feature_new,
-              correction = correction
-            ),
+            {object = creator(
+              feat = bs$feat_b,
+              tr = bs$tr_b,
+              yobs = bs$yobs_b
+            )
+            for (correction_i in correction) {
+              pred_B[[correction_i]][, b] <-
+                EstimateCorrectedCATE(
+                  object,
+                  feature_new = feature_new,
+                  correction = correction_i
+                  )
+
+            }}
+            ,
             warning = function(w) {
               if (w$message %in% known_warnings) {
                 # message was already printed and can be ignored
@@ -186,26 +194,28 @@ slearner_CI <- function(theObject,
   if (bootstrapVersion == "normalApprox") {
 
     # Normal Approximated Bootstrap -----------------------------------------
-
-    pred <- EstimateCate(theObject, feature_new = feature_new)
-    # the the 5% and 95% CI from the bootstrapped procedure
-    CI_b <- data.frame(
-      X5. =  apply(pred_B, 1, function(x)
-        quantile(x, c(.025))),
-      X95. = apply(pred_B, 1, function(x)
-        quantile(x, c(.975))),
-      sd = apply(pred_B, 1, function(x) sd(x))
-    )
-
-    return(data.frame(
-      pred = pred,
-      X5. =  CI_b$X5.,
-      X95. = CI_b$X95.
-      # X5. =  pred - (CI_b$X95. - CI_b$X5.) / 2,
-      # X95. = pred + (CI_b$X95. - CI_b$X5.) / 2
-      # X5. =  2 * pred - CI_b$X95.,
-      # X95. = 2 * pred - CI_b$X5.
-    ))
+    return_list <- list()
+    for (correction_i in correction) {
+      pred <- EstimateCate(theObject, feature_new = feature_new)
+      # the the 5% and 95% CI from the bootstrapped procedure
+      CI_b <- data.frame(
+        X5. =  apply(pred_B[[correction_i]], 1, function(x)
+          quantile(x, c(.025))),
+        X95. = apply(pred_B[[correction_i]], 1, function(x)
+          quantile(x, c(.975))),
+        sd = apply(pred_B[[correction_i]], 1, function(x) sd(x))
+      )
+      return_list[[correction_i]] <- data.frame(
+        pred = pred,
+        X5. =  CI_b$X5.,
+        X95. = CI_b$X95.
+        # X5. =  pred - (CI_b$X95. - CI_b$X5.) / 2,
+        # X95. = pred + (CI_b$X95. - CI_b$X5.) / 2
+        # X5. =  2 * pred - CI_b$X95.,
+        # X95. = 2 * pred - CI_b$X5.
+      )
+    }
+    return(return_list)
   } else {
     stop("bootstrapVersion must be specified.")
   }
