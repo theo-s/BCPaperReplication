@@ -33,7 +33,7 @@ experiment_list[["Ex1"]] <- function(
 
 ## Ex 2 GOTV Data with the T Learner full sample estimate as the True Tau
 experiment_list[["Ex2"]] <- function(
-  n = 22946,
+  n = 10000,
   seed = 1,
   snr = 1
 ) {
