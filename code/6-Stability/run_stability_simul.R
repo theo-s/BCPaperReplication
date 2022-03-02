@@ -15,14 +15,15 @@ if (!interactive()){
   seed <- 101
 }
 
-source("code/define_experiments_breiman.R")
+source("code/prediction_sims/define_experiments_breiman.R")
+source("code/6-Stability/define_stability_estimators.R")
 
 n <- 1000
 
 # Cycle through the data sets and get the predictions from several RF variants on
 # each one
 for (data_i in 1:length(names(experiment_list))) {
-  data <- readRDS(file = paste0("data/",names(experiment_list)[data_i], ".RDS"))
+  data <- readRDS(file = paste0("code/prediction_sims/data/",names(experiment_list)[data_i], ".RDS"))
 
   # Get test data
   x_test <- data$x
@@ -48,7 +49,7 @@ for (data_i in 1:length(names(experiment_list))) {
                  ntree = 1000
   )
 
-  filename = paste0("results/Exp",data_i,"seed",seed,".RDS")
+  filename = paste0("code/6-Stability/results/Exp",data_i,"seed",seed,".RDS")
 
   results_df <- data.frame(matrix(data=NA,ncol=nrow(method_list),nrow = nrow(x_test)))
   colnames(results_df) <- apply(method_list, MARGIN = 1, FUN=function(x){return(paste0(x[1],".",x[2]))})
