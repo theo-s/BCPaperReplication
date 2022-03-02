@@ -142,11 +142,12 @@ slearner_CI <- function(theObject,
     # if that is 100 we really cannot fit it and bootstrap
     # seems to be infeasible.
 
-    while (is.na(pred_B[[1]][1, b])) {
+    # Check that none of the entries in Pred B are null
+    while (any(unlist(lapply(pred_B, function(x){return(is.na(x[1, b]))})))) {
       if (went_wrong == 100)
         stop("one of the groups might be too small to
                do valid inference.")
-      S[, b] <- rep(0, nrow(S))
+        S[, b] <- rep(0, nrow(S))
 
 
         tryCatch({
@@ -189,6 +190,8 @@ slearner_CI <- function(theObject,
         })
       went_wrong <- went_wrong + 1
     }
+    if (verbose)
+      print(paste0("# Errors: ",went_wrong))
   }
 
   if (bootstrapVersion == "normalApprox") {
@@ -198,6 +201,7 @@ slearner_CI <- function(theObject,
     for (correction_i in correction) {
       pred <- EstimateCate(theObject, feature_new = feature_new)
       # the the 5% and 95% CI from the bootstrapped procedure
+
       CI_b <- data.frame(
         X5. =  apply(pred_B[[correction_i]], 1, function(x)
           quantile(x, c(.025))),
