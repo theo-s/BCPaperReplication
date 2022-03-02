@@ -28,14 +28,8 @@ EstimateCorrectedCATE <- function(theObject,
     )
   } else if (correction == "bc3") {
     return(
-      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1), nrounds = 1,
-                                  params.forestry = list("mtry" = 2),
-                                  feats = c((ncol(feature_new)+1)),
-                                  monotone = TRUE) -
-        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0), nrounds = 1,
-                                    params.forestry = list("mtry" = 2),
-                                    feats = c((ncol(feature_new)+1)),
-                                    monotone = TRUE)
+      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1), nrounds = 1) -
+        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0), nrounds = 1)
     )
   } else if (correction == "bc4") {
     return(
@@ -144,10 +138,13 @@ slearner_CI <- function(theObject,
 
     # Check that none of the entries in Pred B are null
     while (any(unlist(lapply(pred_B, function(x){return(is.na(x[1, b]))})))) {
-      if (went_wrong == 100)
+      if (went_wrong == 100) {
+        print(known_warnings)
         stop("one of the groups might be too small to
                do valid inference.")
-        S[, b] <- rep(0, nrow(S))
+      }
+
+      S[, b] <- rep(0, nrow(S))
 
 
         tryCatch({

@@ -45,7 +45,7 @@ es_names <- names(estimator_list)
 data_names <- names(experiment_list)
 
 # The corrections to use for S RF
-correction_types <- c("none", "bc1","bc2","bc6")
+correction_types <- c("none", "bc1","bc2","bc3","bc6")
 
 exp_names <- list("Ex1" = "ACIC 2018 Data", "Ex2" = "GOTV Data", "Ex3" = "Transphobia data")
 
