@@ -25,20 +25,19 @@ get_results <- function(exp = 1) {
 
     # Save the preds
     for (i in 1:nrow(method_list)) {
-      preds_list[[i]][seed,] <- res[[i]]
+      preds_list[[i]][seed,] <- res[[i]] %>% as.numeric()
     }
   }
-
 
   # Get variance of preds
   variances <- list()
   for (i in 1:nrow(method_list)) {
-    variances[[i]] <-  mean(apply(preds_list[[i]], MARGIN = 2, FUN = sd))
+    variances[[i]] <-  mean(apply(preds_list[[i]], MARGIN = 2, FUN = sd, na.rm = TRUE), na.rm = TRUE)
   }
 
   bias_list <- list()
   for (i in 1:nrow(method_list)) {
-    bias_list[[i]] <-  mean(abs(apply(preds_list[[i]], MARGIN = 2, FUN = mean) - data$y_true))
+    bias_list[[i]] <-  mean(abs(apply(preds_list[[i]], MARGIN = 2, FUN = mean, na.rm = TRUE) - data$y_true), na.rm = TRUE)
   }
 
   return(data.frame(Exp = rep(exp, nrow(method_list)),
@@ -56,18 +55,28 @@ for (i in 1:5) {
   results <- rbind(results,cur_res)
 }
 
-colnames(results) <- c("Experiment #", "Estimator", "sqrt(Variance)","|Bias|")
+colnames(results) <- c("Experiment", "Estimator", "SE","|Bias|")
 
-results[,2] <- rep(c("Random Forest","Random Forest (linear debiase)", "Random Forest (linear + rf debiase)"),max(results[,1]))
+for (exp in 1:5) {
+  results %>%
+    melt(id = c("Estimator","Experiment")) %>%
+    filter(Experiment == exp) %>%
+    dplyr::select(-Experiment) %>%
+    ggplot(aes(fill = variable, y = value, x = reorder(Estimator,-value)))+
+    geom_bar(position="stack", stat="identity")+
+    labs(y = "SE + |Bias|", x = "")+
+    theme_classic()+
+    ggeasy::easy_rotate_x_labels()+
+    ggeasy::easy_add_legend_title("Error Term")+
+    ggtitle(paste0("Experiment ",exp))+
+    scale_fill_brewer()
+  ggsave(paste0("figures/stability_experiment",exp,".pdf"), height = 4,width = 4)
+}
 
-results_bias <- results[,c(1,2,4)]
-results_var <- results[,c(1,2,3)]
 
-results_bias %>%
-  pivot_wider(names_from = "Estimator",values_from = "|Bias|") -> results_bias
 
-results_var %>%
-  pivot_wider(names_from = "Estimator",values_from = "sqrt(Variance)") -> results_var
 
-xtable(results_bias, caption = "|Bias| for estimators across all experiments")
-xtable(results_var, caption = "sqrt(Variance) for estimators across all experiments")
+
+
+
+
