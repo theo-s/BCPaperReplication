@@ -99,7 +99,9 @@ GeneralCorrectedPredict <- function(object,
                                           newdata = data.frame(V1 = data_train$Ypred_corrected))
 
   } else if (method2 == "loess") {
-    fit <- loess(Y ~ ., data = data.frame(Y = Ytrain, V1 = data_train$Ypred_corrected))
+    fit <- loess(Y ~ .,
+                 data = data.frame(Y = Ytrain, V1 = data_train$Ypred_corrected),
+                 control=loess.control(surface="direct"))
 
     data_test$Ypred_corrected <- predict(fit,
                                          newdata = data.frame(V1 = data_test$Ypred_corrected))
