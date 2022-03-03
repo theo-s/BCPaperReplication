@@ -69,7 +69,7 @@ for (exp in 1:5) {
     ggeasy::easy_rotate_x_labels()+
     ggeasy::easy_add_legend_title("Error Term")+
     ggtitle(paste0("Experiment ",exp))+
-    scale_fill_brewer()
+    scale_fill_manual(values = c("steelblue3","steelblue4"))
   ggsave(paste0("figures/stability_experiment",exp,".pdf"), height = 4,width = 4)
 }
 

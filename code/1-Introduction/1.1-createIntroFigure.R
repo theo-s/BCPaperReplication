@@ -67,15 +67,16 @@ all_data %>%
                                "mtry=.3" = .7,
                                "mtry=.1" = .7)) +
   scale_color_manual(values = c("Truth" = "black",
-                                "mtry=1" = "blue",
-                                "mtry=.5" = "green",
-                                "mtry=.3" = "red",
-                                "mtry=.1" = "orange")) +
+                                "mtry=1" = "steelblue4",
+                                "mtry=.5" = "steelblue3",
+                                "mtry=.3" = "steelblue2",
+                                "mtry=.1" = "steelblue1")) +
+  # scale_color_brewer()+
   scale_alpha_manual(values = c("Truth" = 1,
-                                "mtry=1"= .6,
-                                "mtry=.5" = .6,
-                                "mtry=.3" = .6,
-                                "mtry=.1" = .6)) +
+                                "mtry=1"= .8,
+                                "mtry=.5" = .8,
+                                "mtry=.3" = .8,
+                                "mtry=.1" = .8)) +
   xlab(label = "X1")+
   ylab(label = "Outcome")+
   theme_classic()
