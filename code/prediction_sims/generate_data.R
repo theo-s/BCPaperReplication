@@ -7,6 +7,6 @@ for (i in 1:length(names(experiment_list))) {
   print(name)
   func <- experiment_list[[i]][[1]]
   data <- func(n,1)
-  saveRDS(data, file = paste0("data/",name,".RDS"))
+  saveRDS(data, file = paste0("code/prediction_sims/data/",name,".RDS"))
 }
 

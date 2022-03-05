@@ -2,6 +2,8 @@ library(xtable)
 library(dplyr)
 library(reshape)
 library(tidyr)
+library(gridExtra)
+library(cowplot)
 source("code/prediction_sims/define_experiments_breiman.R")
 exp <- 1
 
@@ -36,7 +38,7 @@ get_results <- function(exp = 1) {
   bias_3 <- mean(abs(apply(preds_3, MARGIN = 2, FUN = mean) - data$y_true))
 
   return(data.frame(Exp = rep(exp, 3),
-                    Es = c("RF", "RF_lin", "RF_step_lin"),
+                    Es = c("none.none", "none.ols", "rf.ols"),
                     Var = c(var_1,var_2,var_3),
                     Bias = c(bias_1,bias_2,bias_3)))
 }
@@ -52,7 +54,7 @@ for (i in 1:5) {
 
 colnames(results) <- c("Experiment", "Estimator", "SE","|Bias|")
 
-results[,2] <- rep(c("None","linear BC", "linear + nonlinear BC"),max(results[,1]))
+#results[,2] <- rep(c("None","linear BC", "linear + nonlinear BC"),max(results[,1]))
 
 # Make Xtable tables
 results_bias <- results[,c(1,2,4)]
@@ -68,41 +70,30 @@ xtable(results_bias, caption = "|Bias| for estimators across all experiments")
 xtable(results_var, caption = "sqrt(Variance) for estimators across all experiments")
 
 
-# Make figures for bias
+# Make figures for bias + Se
+plots <- list()
 for (exp in 1:5) {
   results %>%
-    melt(id = c("Estimator","Experiment")) %>%
     filter(Experiment == exp) %>%
+    arrange(-`|Bias|`) %>%
+    melt(id = c("Estimator","Experiment")) %>%
     dplyr::select(-Experiment) %>%
-    filter(variable == "|Bias|") %>%
-    ggplot(aes(fill = variable, y = value, x = reorder(Estimator,-value)))+
+    # filter(variable == "|Bias|") %>%
+    ggplot(aes(fill = variable, y = value, x = Estimator))+
     geom_bar(position="stack", stat="identity")+
     # facet_wrap(~Experiment)+
-    labs(y = "|Bias|", x = "")+
+    labs(y = "", x = "")+
     theme_classic()+
     ggeasy::easy_rotate_x_labels()+
     ggeasy::easy_add_legend_title("Error Term")+
-    ggtitle(paste0("Experiment ",exp))+
-    scale_fill_manual(values = c("steelblue4","steelblue4"))
-  ggsave(paste0("figures/prediction_bias",exp,".pdf"), height = 4,width = 4)
+    ggtitle(paste0("Experiment  ",exp))+
+    scale_fill_manual(values = c("steelblue3","steelblue4")) -> plot
+  legend <- get_legend(plot)
+  plots[[exp]] <- plot + theme(legend.position="none")
 }
 
+grid.arrange(plots[[1]]+labs(y = "SE + |Bias|", x = ""), plots[[2]], plots[[3]],
+             plots[[4]], plots[[5]], legend, nrow = 1) -> plot_final
 
-# Make figures for SE
-for (exp in 1:5) {
-  results %>%
-    melt(id = c("Estimator","Experiment")) %>%
-    filter(Experiment == exp) %>%
-    dplyr::select(-Experiment) %>%
-    filter(variable == "SE") %>%
-    ggplot(aes(fill = variable, y = value, x = reorder(Estimator,-value)))+
-    geom_bar(position="stack", stat="identity")+
-    # facet_wrap(~Experiment)+
-    labs(y = "SE", x = "")+
-    theme_classic()+
-    ggeasy::easy_rotate_x_labels()+
-    ggeasy::easy_add_legend_title("Error Term")+
-    ggtitle(paste0("Experiment ",exp))+
-    scale_fill_manual(values = c("steelblue3","steelblue3"))
-  ggsave(paste0("figures/prediction_se",exp,".pdf"), height = 4,width = 4)
-}
+ggsave(plot = plot_final, filename = paste0("figures/prediction_summary.pdf"), height = 4,width = 11)
+

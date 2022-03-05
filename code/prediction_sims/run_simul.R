@@ -15,14 +15,14 @@ if (!interactive()){
   seed <- 101
 }
 
-source("define_experiments_breiman.R")
+source("code/prediction_sims/define_experiments_breiman.R")
 
 n <- 1000
 
 # Cycle through the data sets and get the predictions from several RF variants on
 # each one
-for (data_i in 1:length(names(experiment_list))) {
-  data <- readRDS(file = paste0("data/",names(experiment_list)[data_i], ".RDS"))
+for (data_i in 6){#1:length(names(experiment_list))) {
+  data <- readRDS(file = paste0("code/prediction_sims/data/",names(experiment_list)[data_i], ".RDS"))
 
   # Get test data
   x_test <- data$x
@@ -46,7 +46,7 @@ for (data_i in 1:length(names(experiment_list))) {
                   ntree = 2000
                   )
 
-  filename = paste0("results/Exp",data_i,"seed",seed,".RDS")
+  filename = paste0("code/prediction_sims/results/Exp",data_i,"seed",seed,".RDS")
   res <- data.frame(rf = predict(rf, newdata = x_test),
                     lin = correctedPredict(rf, newdata = x_test),
                     rflin = correctedPredict(rf, newdata = x_test, nrounds = 1))

@@ -50,14 +50,14 @@ get_results <- function(exp = 1) {
 results <- data.frame(matrix(NA,ncol=4,nrow=0))
 colnames(results) <- c("Exp", "Es", "Var", "Bias")
 
-for (i in 1:5) {
+for (i in 1:length(experiment_list)) {
   cur_res <- get_results(i)
   results <- rbind(results,cur_res)
 }
 
 colnames(results) <- c("Experiment", "Estimator", "SE","|Bias|")
 
-for (exp in 1:5) {
+for (exp in 1:length(experiment_list)) {
   results %>%
     melt(id = c("Estimator","Experiment")) %>%
     filter(Experiment == exp) %>%

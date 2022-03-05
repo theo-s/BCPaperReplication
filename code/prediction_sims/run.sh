@@ -2,7 +2,9 @@
 
 for seed in {1..100}
 do
-  Rscript run_simul.R --seed "$seed"
+  echo $seed
+  sleep 1
+  Rscript code/prediction_sims/run_simul.R --seed "$seed"
 done
 
 echo All bart Exp1 done
