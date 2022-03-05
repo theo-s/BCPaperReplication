@@ -113,3 +113,20 @@ experiment_list[["Exp5"]] <- list(
     return(y)
   }
 )
+
+experiment_list[["Exp6"]] <- list(
+  Xfun <- function(n, seed){
+    set.seed(seed)
+    p <- 10
+    x_test <- matrix(runif(n*p), ncol = p)
+    y_true <- sin(x_test[,1]*2*pi)
+    data_test <- data.frame(x_test)
+
+    return(list("x" = data_test, "y_true" = y_true))
+  },
+  Yfun <- function(data, seed) {
+    data <- data$x
+    y <- sin(data[,1]*2*pi) + rnorm(n = nrow(data), sd = .5*sd(data[,ncol(data)]))
+    return(y)
+  }
+)

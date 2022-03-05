@@ -22,7 +22,7 @@ n <- 1000
 
 # Cycle through the data sets and get the predictions from several RF variants on
 # each one
-for (data_i in 1:length(names(experiment_list))) {
+for (data_i in 6){#1:length(names(experiment_list))) {
   data <- readRDS(file = paste0("code/prediction_sims/data/",names(experiment_list)[data_i], ".RDS"))
 
   # Get test data
