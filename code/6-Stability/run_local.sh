@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for seed in {3..100}
+for seed in {1..100}
 do
   echo $seed
   sleep 1

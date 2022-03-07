@@ -47,11 +47,11 @@ get_results <- function(exp = 1) {
 results <- data.frame(matrix(NA,ncol=4,nrow=0))
 colnames(results) <- c("Exp", "Es", "Var", "Bias")
 
-for (i in 1:5) {
+for (i in 1:6) {
   cur_res <- get_results(i)
   results <- rbind(results,cur_res)
 }
-
+results$Es <- ifelse(results$Es == "none.none", "no correction",results$Es)
 colnames(results) <- c("Experiment", "Estimator", "SE","|Bias|")
 
 #results[,2] <- rep(c("None","linear BC", "linear + nonlinear BC"),max(results[,1]))
@@ -64,15 +64,15 @@ results_bias %>%
   pivot_wider(names_from = "Estimator",values_from = "|Bias|") -> results_bias
 
 results_var %>%
-  pivot_wider(names_from = "Estimator",values_from = "sqrt(Variance)") -> results_var
+  pivot_wider(names_from = "Estimator",values_from = "SE") -> results_var
 
 xtable(results_bias, caption = "|Bias| for estimators across all experiments")
-xtable(results_var, caption = "sqrt(Variance) for estimators across all experiments")
+xtable(results_var, caption = "SE for estimators across all experiments")
 
 
 # Make figures for bias + Se
 plots <- list()
-for (exp in 1:5) {
+for (exp in 1:6) {
   results %>%
     filter(Experiment == exp) %>%
     arrange(-`|Bias|`) %>%
@@ -93,7 +93,7 @@ for (exp in 1:5) {
 }
 
 grid.arrange(plots[[1]]+labs(y = "SE + |Bias|", x = ""), plots[[2]], plots[[3]],
-             plots[[4]], plots[[5]], legend, nrow = 1) -> plot_final
+             plots[[4]], plots[[5]], plots[[6]], legend, nrow = 1) -> plot_final
 
-ggsave(plot = plot_final, filename = paste0("figures/prediction_summary.pdf"), height = 4,width = 11)
+ggsave(plot = plot_final, filename = paste0("figures/prediction_summary.pdf"), height = 4,width = 13)
 

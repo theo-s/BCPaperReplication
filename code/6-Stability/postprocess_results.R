@@ -55,14 +55,21 @@ for (i in 1:length(experiment_list)) {
   results <- rbind(results,cur_res)
 }
 
+results$Es <- ifelse(results$Es == "none.none", "no correction",results$Es)
+
 colnames(results) <- c("Experiment", "Estimator", "SE","|Bias|")
+
+
 
 for (exp in 1:length(experiment_list)) {
   results %>%
-    melt(id = c("Estimator","Experiment")) %>%
     filter(Experiment == exp) %>%
-    dplyr::select(-Experiment) %>%
-    ggplot(aes(fill = variable, y = value, x = reorder(Estimator,-value)))+
+    arrange(-`|Bias|`) %>%
+    melt(id = c("Estimator","Experiment")) %>%
+    dplyr::select(-Experiment) -> cur_data
+    cur_data$Estimator <- factor(cur_data$Estimator, levels = cur_data$Estimator[1:16])
+    cur_data %>%
+    ggplot(aes(fill = variable, y = value, x = Estimator))+
     geom_bar(position="stack", stat="identity")+
     labs(y = "SE + |Bias|", x = "")+
     theme_classic()+
@@ -72,9 +79,6 @@ for (exp in 1:length(experiment_list)) {
     scale_fill_manual(values = c("steelblue3","steelblue4"))
   ggsave(paste0("figures/stability_experiment",exp,".pdf"), height = 4,width = 4)
 }
-
-
-
 
 
 
