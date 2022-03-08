@@ -196,7 +196,11 @@ slearner_CI <- function(theObject,
     # Normal Approximated Bootstrap -----------------------------------------
     return_list <- list()
     for (correction_i in correction) {
-      pred <- EstimateCate(theObject, feature_new = feature_new)
+      point_pred <- EstimateCorrectedCATE(
+        theObject,
+        feature_new = feature_new,
+        correction = correction_i
+      )
       # the the 5% and 95% CI from the bootstrapped procedure
 
       CI_b <- data.frame(
@@ -206,10 +210,11 @@ slearner_CI <- function(theObject,
           quantile(x, c(.975))),
         sd = apply(pred_B[[correction_i]], 1, function(x) sd(x))
       )
+
       return_list[[correction_i]] <- data.frame(
-        pred = pred,
-        X5. =  CI_b$X5.,
-        X95. = CI_b$X95.
+        pred = point_pred,
+        X5. = point_pred - (1.96 * CI_b$sd),
+        X95. = point_pred + (1.96 * CI_b$sd)
         # X5. =  pred - (CI_b$X95. - CI_b$X5.) / 2,
         # X95. = pred + (CI_b$X95. - CI_b$X5.) / 2
         # X5. =  2 * pred - CI_b$X95.,
