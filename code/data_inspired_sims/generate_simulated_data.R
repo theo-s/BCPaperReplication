@@ -111,7 +111,7 @@ Y1 <- predict(forest.treat, newdata = tra %>% dplyr::select(-Tr,-Y))
 tra$Y <- ifelse(tra$Tr, Y1,Y0)
 tra$Tau <- Y1 - Y0
 
-saveRDS(object = tra, file = "data/tra_Test.RDS")
+saveRDS(object = tra %>% select(-V1), file = "data/tra_Test.RDS")
 
 # Save both base learners
 saveForestry(forest.control, filename = "data/tra_forest_control.Rda")

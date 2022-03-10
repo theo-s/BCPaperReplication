@@ -43,7 +43,7 @@ for (data_i in 6){#1:length(names(experiment_list))) {
                   y = y_train,
                   scale = FALSE,
                   OOBhonest = TRUE,
-                  ntree = 2000
+                  ntree = 1000
                   )
 
   filename = paste0("code/prediction_sims/results/Exp",data_i,"seed",seed,".RDS")

@@ -75,25 +75,27 @@ plots <- list()
 for (exp in 1:6) {
   results %>%
     filter(Experiment == exp) %>%
+    dplyr::select(-SE) %>%
     arrange(-`|Bias|`) %>%
     melt(id = c("Estimator","Experiment")) %>%
     dplyr::select(-Experiment) %>%
     # filter(variable == "|Bias|") %>%
     ggplot(aes(fill = variable, y = value, x = Estimator))+
-    geom_bar(position="stack", stat="identity")+
+    geom_point()+
     # facet_wrap(~Experiment)+
     labs(y = "", x = "")+
     theme_classic()+
     ggeasy::easy_rotate_x_labels()+
     ggeasy::easy_add_legend_title("Error Term")+
+    ggeasy::easy_remove_legend()+
     ggtitle(paste0("Experiment  ",exp))+
     scale_fill_manual(values = c("steelblue3","steelblue4")) -> plot
-  legend <- get_legend(plot)
-  plots[[exp]] <- plot + theme(legend.position="none")
+  #legend <- get_legend(plot)
+  plots[[exp]] <- plot
 }
 
 grid.arrange(plots[[1]]+labs(y = "SE + |Bias|", x = ""), plots[[2]], plots[[3]],
-             plots[[4]], plots[[5]], plots[[6]], legend, nrow = 1) -> plot_final
+             plots[[4]], plots[[5]], plots[[6]], nrow = 1) -> plot_final
 
 ggsave(plot = plot_final, filename = paste0("figures/prediction_summary.pdf"), height = 4,width = 13)
 

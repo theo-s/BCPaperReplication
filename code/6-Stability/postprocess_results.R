@@ -64,23 +64,35 @@ colnames(results) <- c("Experiment", "Estimator", "SE","|Bias|")
 for (exp in 1:length(experiment_list)) {
   results %>%
     filter(Experiment == exp) %>%
+    select(-SE) %>%
     arrange(-`|Bias|`) %>%
     melt(id = c("Estimator","Experiment")) %>%
     dplyr::select(-Experiment) -> cur_data
     cur_data$Estimator <- factor(cur_data$Estimator, levels = cur_data$Estimator[1:16])
     cur_data %>%
     ggplot(aes(fill = variable, y = value, x = Estimator))+
-    geom_bar(position="stack", stat="identity")+
-    labs(y = "SE + |Bias|", x = "")+
+    geom_point()+
+    labs(y = "|Bias|", x = "")+
     theme_classic()+
     ggeasy::easy_rotate_x_labels()+
-    ggeasy::easy_add_legend_title("Error Term")+
+    #ggeasy::easy_add_legend_title("Error Term")+
+    ggeasy::easy_remove_legend()+
     ggtitle(paste0("Experiment ",exp))+
     scale_fill_manual(values = c("steelblue3","steelblue4"))
   ggsave(paste0("figures/stability_experiment",exp,".pdf"), height = 4,width = 4)
 }
 
+# Now tabulate results
+results %>%
+  dplyr::select(-SE) %>%
+  group_by(Experiment) %>%
+  arrange(-`|Bias|`) %>%
+  mutate(pct_change = (`|Bias|`/`|Bias|`[Estimator=="no correction"] - 1) * 100) %>%
+  ungroup() %>%
+  pivot_wider(id_cols = c("Estimator"), names_from = c("Experiment"),values_from = c("pct_change")) -> pct_df
 
+print_df <- pct_df[,c(1,5,4,2,7,3,6)]
+colnames(print_df) <- c("Estimator","Experiment 1","Experiment 2","Experiment 3",
+                        "Experiment 4", "Experiment 5","Experiment 6")
 
-
-
+xtable(print_df, caption = "Percentage decrease in average absolute bias for each estimator and experiment", digits = 1)

@@ -33,14 +33,14 @@ EstimateCorrectedCATE <- function(theObject,
     )
   } else if (correction == "bc4") {
     return(
-      Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 1),
-                                  params.forestry = list("mtry" = 2),
-                                  feats = c((ncol(feature_new)+1)),
-                                  simple=FALSE, num_quants = 3) -
-        Rforestry::correctedPredict(theObject@forest, cbind(feature_new, tr = 0),
-                                    params.forestry = list("mtry" = 2),
-                                    feats = c((ncol(feature_new)+1)),
-                                    simple=FALSE, num_quants = 3)
+      Rforestry::correctedPredict(theObject@forest,
+                                  cbind(feature_new, tr = 1),
+                                  nrounds = 1,
+                                  observations = which(theObject@tr_train==1)) -
+        Rforestry::correctedPredict(theObject@forest,
+                                    cbind(feature_new, tr = 0),
+                                    nrounds = 1,
+                                    observations = which(theObject@tr_train==0))
     )
   } else if (correction == "bc5") {
     return(
