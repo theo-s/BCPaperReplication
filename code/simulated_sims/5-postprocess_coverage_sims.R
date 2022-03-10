@@ -61,4 +61,4 @@ res_tau <- do.call(rbind, res_tau)
 names(res_tau) <- c("method","cr","len","exp","d")
 
 res <- list(tau = res_tau)
-save(res, file = "results/simul_synthetic_results.RData")
+save(res, file = "results/simul_synthetic_results_new.RData")

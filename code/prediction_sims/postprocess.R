@@ -94,7 +94,7 @@ for (exp in 1:6) {
   plots[[exp]] <- plot
 }
 
-grid.arrange(plots[[1]]+labs(y = "SE + |Bias|", x = ""), plots[[2]], plots[[3]],
+grid.arrange(plots[[1]]+labs(y = "|Bias|", x = ""), plots[[2]], plots[[3]],
              plots[[4]], plots[[5]], plots[[6]], nrow = 1) -> plot_final
 
 ggsave(plot = plot_final, filename = paste0("figures/prediction_summary.pdf"), height = 4,width = 13)
