@@ -24,6 +24,7 @@ bart_standard <- function(n = 1000) {
 
   f0 <- bart(x.train = X0,
              y.train = Y0,
+             verbose = FALSE,
              keeptrees = TRUE)
 
   preds <- predict(f0, newdata = X0)
@@ -33,7 +34,7 @@ bart_standard <- function(n = 1000) {
 }
 
 # Runs GRF and forestry and returns the correlation to the true outcome.
-no_honesty <- function(n = 10000) {
+no_honesty <- function(n = 1000) {
   X0 <- matrix(nrow=n, ncol=1)
   X0[,1] <- rnorm(n)
   Y0 <- rnorm(n)
@@ -63,7 +64,7 @@ no_honesty <- function(n = 10000) {
 # Splits the sample, and then returns the results of no honesty GRF and forestry
 # on the test set. This is a reality check, as neither algorithm should
 # know anything about the test set outcomes
-no_honesty_sample_split <- function(n = 10000) {
+no_honesty_sample_split <- function(n = 1000) {
   X0 <- matrix(nrow=n, ncol=1)
   X0[,1] <- rnorm(n)
   Y0 <- rnorm(n)
@@ -97,7 +98,7 @@ no_honesty_sample_split <- function(n = 10000) {
 }
 
 # Runs GRF and forestry with honesty and returns the correlation to the true outcome.
-honesty <- function(n = 10000) {
+honesty <- function(n = 1000) {
   X0 <- matrix(nrow=n, ncol=1)
   X0[,1] <- rnorm(n)
   Y0 <- rnorm(n)
@@ -190,7 +191,7 @@ no_honesty_OOBpreds <- function(n = 1000) {
                                min.node.size = 3,
                                alpha = 0)
   gp0 <- predict(g0, newdata = NULL)
-  p0 <- getOOBpreds(f0)
+  p0 <- predict(f0, aggregation = "oob")
 
   # return the correlations
   if(any(sapply(p0,is.nan)) || any(sapply(gp0,is.nan))) {
@@ -211,7 +212,7 @@ honesty_OOBpreds <- function(n = 1000) {
   # compare GRF and forestry, here we try to run with the exact same settings
   f0 <- forestry(y=Y0,
                  x=X0,
-                 splitratio = .75,
+                 OOBhonest = TRUE,
                  ntree=500
   )
 
@@ -221,15 +222,16 @@ honesty_OOBpreds <- function(n = 1000) {
   g0 <- grf::regression_forest(X = X0,
                                Y = Y0,
                                honesty = TRUE,
-                               honesty.fraction = .8,
+                               honesty.fraction = .5,
                                honesty.prune.leaves = FALSE,
                                num.trees = 500,
-                               sample.fraction = .8,
+                               sample.fraction = .5,
                                ci.group.size = 1,
                                min.node.size = 3,
                                alpha = 0)
-  gp0 <- predict(g0, newdata = NULL)
-  p0 <- getOOBpreds(f0)
+
+  gp0 <- predict(g0, newdata = X0)
+  p0 <- predict(f0, newdata = X0, aggregation = "oob")
 
   # return the correlations
   if(any(sapply(p0,is.nan)) || any(sapply(gp0,is.nan))) {
@@ -265,20 +267,20 @@ for (rep_i in reps) {
   print(paste0("Rep ", rep_i))
 
 
-  # print("Experiment 1")
-  # res <- no_honesty(n = 5000)
-  # results_rf$no_honesty[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
-  # results_grf$no_honesty[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
-  #
-  # print("Experiment 2")
-  # res <- honesty(n = 5000)
-  # results_rf$honesty[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
-  # results_grf$honesty[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
+  print("Experiment 1")
+  res <- no_honesty(n = 1000)
+  results_rf$no_honesty[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
+  results_grf$no_honesty[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
 
-  # print("Experiment 3")
-  # res <- no_honesty_sample_split(n = 5000)
-  # results_rf$sample_split[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
-  # results_grf$sample_split[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
+  print("Experiment 2")
+  res <- honesty(n = 1000)
+  results_rf$honesty[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
+  results_grf$honesty[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
+
+  print("Experiment 3")
+  res <- no_honesty_sample_split(n = 1000)
+  results_rf$sample_split[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
+  results_grf$sample_split[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
 
   #print("Experiment 4")
   #res <- honesty_let_empty(n = 10000)
@@ -287,19 +289,18 @@ for (rep_i in reps) {
 
 
   print("Experiment 5")
-  res <- bart_standard()
+  res <- bart_standard(n=1000)
   results_bart$bart[which(results_rf$rep == rep_i)] <- res["bart"]
-  print(res)
 
-  # print("Experiment 5")
-  # res <- no_honesty_OOBpreds(n = 1000)
-  # results_rf$no_honest_oob[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
-  # results_grf$no_honest_oob[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
-  #
-  # print("Experiment 6")
-  # res <- honesty_OOBpreds(n = 1000)
-  # results_rf$honest_oob[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
-  # results_grf$honest_oob[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
+  print("Experiment 6")
+  res <- no_honesty_OOBpreds(n = 1000)
+  results_rf$no_honest_oob[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
+  results_grf$no_honest_oob[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
+
+  print("Experiment 7")
+  res <- honesty_OOBpreds(n = 1000)
+  results_rf$honest_oob[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
+  results_grf$honest_oob[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
 
 }
 
@@ -308,11 +309,20 @@ print(colMeans(results_rf))
 # write.csv(results_grf, file = "grf_cors.csv")
 # write.csv(results_rf, file = "rf_cors.csv")
 
-results <- rbind(colMeans(results_grf),colMeans(results_rf))
-results <- results[,-1]
+rf_results <- colMeans(results_rf)
+rf_results <- rf_results[c(-1,-5,-6)]
+data <- data.frame( matrix(rf_results[1:2],ncol=2,nrow=1), bart = mean(unlist(results_bart$bart)),matrix(rf_results[3:4],ncol=2,nrow=1))
+colnames(data) <- c("RF + No Honesty", "RF + Honesty", "RF + Sample Split", "RF + OOB Honesty","BART")
 
-rownames(results) <- c("GRF", "Forestry")
+data %>%
+  melt() %>%
+  dplyr::arrange(-value) %>%
+  ggplot(aes(x = variable, y = value))+
+  geom_point()+
+  labs(x = "Estimator", y = "Cor(X,Y)")+
+  theme_classic()
 
-colnames(results) <- c("No Honesty", "Honesty", "Sample Split", "Honesty (Empty Nodes Ok)", "OOB Preds No Honesty", "OOB Preds Honesty")
+ggsave(filename = "figures/oob_honesty.pdf", width = 7,height = 3)
 
+saveRDS(results_rf, file = "results/oob_honest_res.RDS")
 
