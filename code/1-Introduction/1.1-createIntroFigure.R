@@ -17,7 +17,7 @@ data_test$y <- y_test
 all_data <- data.frame(x = x_test[,1],
                        Truth = y_test)
 
-for (mtry in c(10,5,3,1)) {
+for (mtry in c(3)) {
 
 
   n_reps <- 100
@@ -32,7 +32,7 @@ for (mtry in c(10,5,3,1)) {
     data$y <- y_train
 
     rf <- forestry(x = data[,-ncol(data)],
-                   y = data[,ncol(data)] + rnorm(n = 500, sd = .5*sd(data[,ncol(data)])),
+                   y = data[,ncol(data)] + rnorm(n = 500, sd = 1*sd(data[,ncol(data)])),
                    mtry = mtry,
                    seed = iter,
                    OOBhonest = TRUE)
@@ -46,39 +46,28 @@ for (mtry in c(10,5,3,1)) {
   all_data <- cbind(all_data, mean_preds)
 }
 
-colnames(all_data) <- c("x", "Truth","mtry=1","mtry=.5","mtry=.3","mtry=.1")
+colnames(all_data) <- c("x", "Truth","Random Forest")
 
 # Now see the RF fit
 all_data %>%
   melt(id = "x") %>%
   dplyr::rename(Legend = variable, Truth = value) %>%
-  mutate(`mtry Fraction` = as.character(Legend)) %>%
-  ggplot(aes(x = x, y = Truth, color = `mtry Fraction`, linetype = `mtry Fraction`,
-             size = `mtry Fraction`, alpha = `mtry Fraction`)) +
+  mutate(`Predictions` = as.character(Legend)) %>%
+  ggplot(aes(x = x, y = Truth, color = `Predictions`, linetype = `Predictions`,
+             size = `Predictions`, alpha = `Predictions`)) +
   geom_line() +
   scale_linetype_manual(values = c("Truth" = "dashed",
-                                   "mtry=1" = "solid",
-                                   "mtry=.5" = "solid",
-                                   "mtry=.3" = "solid",
-                                   "mtry=.1" = "solid")) +
+                                   "Random Forest" = "solid")) +
   scale_size_manual(values = c("Truth" = .9,
-                               "mtry=1" = .7,
-                               "mtry=.5" = .7,
-                               "mtry=.3" = .7,
-                               "mtry=.1" = .7)) +
+                               "Random Forest" = .7)) +
   scale_color_manual(values = c("Truth" = "black",
-                                "mtry=1" = "steelblue4",
-                                "mtry=.5" = "steelblue3",
-                                "mtry=.3" = "steelblue2",
-                                "mtry=.1" = "steelblue1")) +
+                                "Random Forest" = "steelblue1")) +
   # scale_color_brewer()+
   scale_alpha_manual(values = c("Truth" = 1,
-                                "mtry=1"= .8,
-                                "mtry=.5" = .8,
-                                "mtry=.3" = .8,
-                                "mtry=.1" = .8)) +
+                                "Random Forest" = .8)) +
   xlab(label = "X1")+
   ylab(label = "Outcome")+
+  ggeasy::easy_remove_legend_title()+
   theme_classic()
 
 ggsave(file = paste0("~/Dropbox/BCPaperReplication/figures/intro_mtry.pdf"), width = 5.5, height = 3,

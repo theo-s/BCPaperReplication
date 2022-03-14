@@ -312,17 +312,18 @@ print(colMeans(results_rf))
 rf_results <- colMeans(results_rf)
 rf_results <- rf_results[c(-1,-5,-6)]
 data <- data.frame( matrix(rf_results[1:2],ncol=2,nrow=1), bart = mean(unlist(results_bart$bart)),matrix(rf_results[3:4],ncol=2,nrow=1))
-colnames(data) <- c("RF + No Honesty", "RF + Honesty", "RF + Sample Split", "RF + OOB Honesty","BART")
+colnames(data) <- c("RF No Honesty", "RF Honesty","BART", "RF Sample Split", "RF OOB Honesty")
 
 data %>%
   melt() %>%
   dplyr::arrange(-value) %>%
   ggplot(aes(x = variable, y = value))+
   geom_point()+
-  labs(x = "Estimator", y = "Cor(X,Y)")+
+  labs(x = "", y = "Estimated Correlation")+
+  geom_hline(yintercept=0, linetype="dashed", color = "blue")+
   theme_classic()
 
-ggsave(filename = "figures/oob_honesty.pdf", width = 7,height = 3)
+ggsave(filename = "figures/oob_honesty.pdf", width = 6,height = 4)
 
 saveRDS(results_rf, file = "results/oob_honest_res.RDS")
 
