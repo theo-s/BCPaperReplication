@@ -15,26 +15,27 @@ method_labels <- c( "BART","Causal Forest", "S-Learner (linear debiase)", "S-Lea
 final_res %>%
   mutate(exprid = factor(snr,
                          levels = c(.5,1,2),
-                         labels = c("Low", "Medium","High"))) %>%
+                         labels = c("High Noise (SNR = .5)", "Medium Noise (SNR = 1)","Low Noise (SNR = 2)"))) %>%
   mutate(method = factor(method,
                          levels = method_levels,
                          labels = method_labels)) %>%
   #filter(method %in% c("S-Learner (debiased rf)","Causal Forest", "X-Learner (rf)", "BART","CQR-quantRF","CQR-quantBoosting", "CQR-quantBART")) %>%
   filter(!(method %in% c("Causal Forest"))) %>%
   filter(method %in% c("BART","S-Learner (debiased)","S-Learner (oob honest)")) %>%
+  group_by(method, exprid) %>%
+  summarise(cov = mean(cov)) %>%
   ggplot(aes(x = method, y = cov)) +
-  geom_boxplot() +
+  geom_point()+
+  theme_bw()+
   facet_grid(~  exprid) +
   geom_hline(yintercept = 0.95, color = "red") +
   ylim(c(0, 1)) +
-  xlab("Method") + ylab("Empirical Coverage of CATE (alpha = 0.05)") +
+  ggeasy::easy_labs(y = "Empirical Coverage of CATE (alpha = 0.05)",x="")+
   coord_flip() +
-  theme_bw() +
-  theme(panel.grid = element_blank(),
-        strip.text = element_text(size = 15))
+  theme_bw()
 
-ggsave("figures/transphobia_coverage_tau_paper.pdf", last_plot(),
-       width = 9, height = 6)
+ggsave("figures/transphobia_coverage.pdf", last_plot(),
+       width = 7, height = 3)
 
 
 # Dot plot of the average length of the CATE intervals:
@@ -42,7 +43,7 @@ ggsave("figures/transphobia_coverage_tau_paper.pdf", last_plot(),
 final_res %>%
   mutate(exprid = factor(snr,
                          levels = c(.5,1,2),
-                         labels = c("Low", "Medium","High"))) %>%
+                         labels = c("High Noise (SNR = .5)", "Medium Noise (SNR = 1)","Low Noise (SNR = 2)"))) %>%
   mutate(method = factor(method,
                          levels = method_levels,
                          labels = method_labels)) %>%
@@ -54,10 +55,10 @@ final_res %>%
   ggplot(aes(x = method, y = len)) +
   facet_grid(~ exprid) +
   geom_point()+
+  coord_flip() +
   theme_bw()+
-  ggeasy::easy_labs(y = "Average Length of Interval estimates of CATE (alpha = .05)",x="")+
-  ggeasy::easy_rotate_x_labels()
+  ggeasy::easy_labs(y = "Average Length of Interval estimates of CATE (alpha = .05)",x="")
 
 
-ggsave("figures/transphobia_coverage.pdf", last_plot(),
-       width = 9, height = 6)
+ggsave("figures/transphobia_length.pdf", last_plot(),
+       width = 7, height = 3)
