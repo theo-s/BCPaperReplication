@@ -112,3 +112,21 @@ estimator_list[["x_rf"]] <- function(X, Y, T, Xtest,
   return(CI_list)
 }
 
+estimator_list[["x_rf_none"]] <- function(X, Y, T, Xtest,
+                                     B = 500, corrections=c("none")){
+  if (B == 0){
+    df_tau <- df_Y <- list(cr = NA, len = NA)
+    return(list(tau = df_tau, Y1 = df_Y))
+  }
+  
+  x_rf <- causalToolbox::X_RF(feat = X, tr = T, yobs = Y, nthread = 0)
+  
+  # Loop through the possible corrections
+  return_list <- list()
+  
+  CI_list <- slearner_CI(x_rf, Xtest, B = B,
+                         verbose = TRUE, nthread = 0)
+  
+  return(CI_list)
+}
+
