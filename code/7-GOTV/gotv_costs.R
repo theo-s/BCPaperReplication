@@ -25,6 +25,7 @@ data.frame(PredictedCate = pred_cate) %>%
   theme_classic()+
   labs(x = "Estimated CATE", y = "Number of Potential Voters")
 
+ggsave(filename = "figures/gotv_cate.pdf", height = 4, width = 6)
 
 # Cost of a letter stamp: $.58 for now don't account for labor costs.
 

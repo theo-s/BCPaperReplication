@@ -11,7 +11,7 @@ if (!interactive()){
   parser$add_argument("--B", type = "integer", default = 0, help = "Bootstrap samples")
   parser$add_argument("--seed", type = "double", default = 1, help = "rng seed")
   parser$add_argument("--ex", type = "integer", default = 1, help = "Experiment #")
-  #parser$add_argument("--es", type = "integer", default = 1, help = "Estimator #")
+  parser$add_argument("--es", type = "integer", default = 1, help = "Estimator #")
 
   args <- parser$parse_args()
 
@@ -20,24 +20,25 @@ if (!interactive()){
   B <- args$B
   seed <- args$seed
   experiment_num <- args$ex
-  #estimator_num <- args$es
+  estimator_num <- args$es
 } else {
-  n <- 1000
+  n <- 100
   d <- 10
-  B <- 100
+  B <- 50
   seed <- 3425
   experiment_num <- 1
-  #estimator_num <- 1
+  estimator_num <- 4
 }
 
-source("utils.R")
-source("define_helpers.R")
-source("define_experiments.R")
-source("define_estimators.R")
+source("code/simulated_sims/utils.R")
+source("code/define_helpers.R")
+source("code/simulated_sims/define_experiments.R")
+source("code/define_estimators.R")
 
 print(paste0("Running experiment ", experiment_num, " with B = ", B, " D = ", d, "seed = ", seed))
 
-for (estimator_num in 1:length(estimator_list)) {
+#for (estimator_num in 1:length(estimator_list)) {
+ 
 	ntest <- 10000
 	set.seed(seed)
 	
@@ -60,8 +61,8 @@ for (estimator_num in 1:length(estimator_list)) {
 	psfun <- cur_expr[[4]]
 	errdist <- cur_expr[[5]]
 
-	filename <- paste0("results/",
-                   ex_name,"/",
+	filename <- paste0("code/simulated_sims/results/",
+                   ex_name ,
                    es_name ,
                    "_n", n,
                    "_d", d,
@@ -77,5 +78,5 @@ for (estimator_num in 1:length(estimator_list)) {
 	# Save and print out results
 	print(res$tau)
 	save(res, file = filename)
-}
+#}
 

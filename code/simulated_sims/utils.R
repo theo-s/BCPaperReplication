@@ -80,7 +80,7 @@ Cf_expr <- function(n, d, ntest,
   if (B > 0){
     CI <- try(estimator(X, Y, T, Xtest, B))
     if (class(CI) != "try-error"){
-      df_tau <- summary_CI(tautest, CI$tau)
+      df_tau <- summary_CI(tautest, CI[[1]][,-1])
       df_tau <- data.frame(method = es_name,
                            cr = df_tau$cr,
                            len = df_tau$len)

@@ -5,6 +5,11 @@ EstimateCorrectedCATE <- function(theObject,
 {
   feature_new <- as.data.frame(feature_new)
 
+  # If X Learner, use standard CATE predictions
+  if ( class(theObject)[1] == "X_RF") {
+    return(EstimateCate(theObject = theObject, feature_new = feature_new))
+  }
+  
   # Check if we want to do bias correction predictions
   if (correction == "bc1") {
     return(
