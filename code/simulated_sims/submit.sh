@@ -2,9 +2,9 @@
 
 #SBATCH --job-name=x_learner_sims
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=4
 #SBATCH --time=7-00:00:00
-#SBATCH --array=1-1600
+#SBATCH --array=1-20
 #SBATCH --partition=yugroup
 
 LINE=$(sed -n ${SLURM_ARRAY_TASK_ID}p "code/simulated_sims/xl_params.txt")
