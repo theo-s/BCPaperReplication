@@ -10,7 +10,9 @@ set.seed(23234243)
 n <- 500
 p <- 10
 x_test <- matrix(runif(n*p), ncol = p)
-y_test <- sin(x_test[,1]*2*pi)
+x_test[,1] <- 2*x_test[,1]
+x_test[,2] <- .9*x_test[,2]
+y_test <- 2 * x_test[,1] + 3*x_test[,2] + .1 *x_test[,3]#sin(x_test[,1]*2*pi)
 data_test <- data.frame(x_test)
 data_test$y <- y_test
 
@@ -29,7 +31,9 @@ for (mtry in c(3)) {
     set.seed(iter)
 
     x_train <- matrix(runif(n*p), ncol = p)
-    y_train <- sin(x_train[,1]*2*pi)
+    x_train[,1] <- 2*x_train[,1]
+    x_train[,2] <- .9*x_train[,2]
+    y_train <- 2*x_train[,1] + 3*x_train[,2] + .1 *x_train[,3]#sin(x_train[,1]*2*pi)
     data <- data.frame(x_train)
     data$y <- y_train
 
@@ -44,7 +48,7 @@ for (mtry in c(3)) {
     correct.preds <- GeneralCorrectedPredict(rf,
                                              Xtest = x_test,
                                              method1 = "none",
-                                             method2 = "loess")
+                                             method2 = "ols")
 
     # correct.preds <- correctedPredict(rf,
     #                                   newdata = x_test,
@@ -62,6 +66,31 @@ for (mtry in c(3)) {
 }
 
 colnames(all_data) <- c("x", "Truth","Random Forest","Debiased Random Forest")
+
+
+
+data.frame(Truth = all_data$Truth,
+           Predictions = all_data$`Random Forest`) %>%
+  ggplot(aes(x = Truth, y = Predictions))+
+  geom_point()+
+  xlim(min(min(all_data$Truth),min(all_data$`Random Forest`)),max(max(all_data$Truth),max(all_data$`Random Forest`)) )+
+  ylim(min(min(all_data$Truth),min(all_data$`Random Forest`)),max(max(all_data$Truth),max(all_data$`Random Forest`)) )+
+  geom_abline(intercept = c(0,0), slope = 1)+
+  theme_classic()
+
+# ggsave(file = paste0("~/Dropbox/BCPaperReplication/figures/simple_linear.pdf"), width = 4, height = 4,
+#        dpi = 800)
+
+data.frame(Truth = all_data$Truth,
+           DebiasedPredictions = all_data$`Debiased Random Forest`) %>%
+  ggplot(aes(x = Truth, y = DebiasedPredictions))+
+  geom_point()+
+  xlim(min(min(all_data$Truth),min(all_data$`Debiased Random Forest`)),max(max(all_data$Truth),max(all_data$`Debiased Random Forest`)) )+
+  ylim(min(min(all_data$Truth),min(all_data$`Debiased Random Forest`)),max(max(all_data$Truth),max(all_data$`Debiased Random Forest`)) )+
+  geom_abline(intercept = c(0,0), slope = 1)+
+  theme_classic()
+# ggsave(file = paste0("~/Dropbox/BCPaperReplication/figures/simple_linear_correct.pdf"), width = 4, height = 4,
+#        dpi = 800)
 
 # Now see the RF fit
 all_data %>%

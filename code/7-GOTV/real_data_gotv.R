@@ -2,6 +2,7 @@ library(ggplot2)
 library(dplyr)
 library(Rforestry)
 
+# Needs to be .98, resolves previous bug with bias correction on binary outcomes
 packageVersion("Rforestry")
 
 set.seed(2328)
@@ -25,26 +26,30 @@ Tr <- social$Tr
 S_RF <- forestry(x = cbind(features, Tr),
                  y = outcome,
                  scale = FALSE,
-                 seed = 101,
-                 OOBhonest = TRUE)
+                 OOBhonest = TRUE,
+                 ntree = 500,
+                 seed = 101)
 
 
 # Estimate the CATE using standard and corrected predictions ===================
-pred_cate <- predict(S_RF, newdata = cbind(features, Tr = 1), aggregation = "oob") -
-  predict(S_RF, newdata = cbind(features, Tr = 0), aggergation = "oob")
+pred_cate <- predict(S_RF, newdata = cbind(features, Tr = 1), aggregation = "doubleOOB") -
+  predict(S_RF, newdata = cbind(features, Tr = 0), aggregation = "doubleOOB")
 
-
-pred_cate_corrected <-  Rforestry::correctedPredict(S_RF,
-                                                    cbind(features, Tr = 1),
-                                                    #nrounds = 1,
-                                                    linear = TRUE,
-                                                    observations = which(Tr==1)) -
-  Rforestry::correctedPredict(S_RF,
-                              cbind(features, Tr = 0),
-                              #nrounds = 1,
-                              linear = TRUE,
-                              observations = which(Tr==0))
-
+p_treat <-  Rforestry::correctedPredict(S_RF,
+                                        cbind(features, Tr = 1),
+                                        aggregation = "doubleOOB",
+                                        linear = TRUE,
+                                        binary = TRUE,
+                                        verbose= TRUE,
+                                        observations = which(Tr==1))
+p_control <- Rforestry::correctedPredict(S_RF,
+                                         cbind(features, Tr = 0),
+                                         aggregation = "doubleOOB",
+                                         linear = TRUE,
+                                         binary = TRUE,
+                                         verbose= TRUE,
+                                         observations = which(Tr==0))
+pred_cate_corrected <- p_treat$test.preds - p_control$test.preds
 # Analysis =====================================================================
 mean(pred_cate_corrected)
 mean(pred_cate)
@@ -54,10 +59,13 @@ pred_diffs <- pred_cate_corrected - pred_cate
 data.frame(PredictedCate = pred_diffs) %>%
   ggplot(aes(x = PredictedCate))+
   geom_histogram(bins = 150)+
+  xlim(-.01,.03)+
   geom_vline(xintercept = mean(pred_diffs), color = "blue")+
   theme_classic()+
-  labs(x = "CATE (Debiased) - CATE (standard)", y = "Number of Potential Voters")
+  labs(x = "CATE (debiased) - CATE (standard)", y = "Number of Potential Voters")
 
+
+ggsave("figures/gotv_comparison.pdf", width = 6, height = 4)
 # Now compare the cost of the campaigns
 # Suppose a vote is worth $89, so we contact any voter with a CATE > .7%
 
