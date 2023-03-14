@@ -2,6 +2,8 @@ library(Rforestry)
 library(grf)
 library(ranger)
 library(dbarts)
+library(dplyr)
+library(reshape2)
 packageVersion("Rforestry")
 
 
@@ -265,7 +267,7 @@ results_bart$bart <- NA
 
 for (rep_i in reps) {
   print(paste0("Rep ", rep_i))
-
+  set.seed(rep_i)
 
   print("Experiment 1")
   res <- no_honesty(n = 1000)
@@ -282,15 +284,9 @@ for (rep_i in reps) {
   results_rf$sample_split[which(results_rf$rep == rep_i)] <- res["forestry"]$forestry
   results_grf$sample_split[which(results_grf$rep == rep_i)] <- res["GRF"]$GRF
 
-  #print("Experiment 4")
-  #res <- honesty_let_empty(n = 10000)
-  #results_rf$honesty_empty[which(results_rf$rep == rep_i)] <-res["forestry"]$forestry
-  #results_grf$honesty_empty[which(results_grf$rep == rep_i)] <-res["GRF"]$GRF
-
-
-  print("Experiment 5")
-  res <- bart_standard(n=1000)
-  results_bart$bart[which(results_rf$rep == rep_i)] <- res["bart"]
+  # print("Experiment 5")
+  # res <- bart_standard(n=1000)
+  # results_bart$bart[which(results_rf$rep == rep_i)] <- res["bart"]
 
   print("Experiment 6")
   res <- no_honesty_OOBpreds(n = 1000)
@@ -311,8 +307,8 @@ print(colMeans(results_rf))
 
 rf_results <- colMeans(results_rf)
 rf_results <- rf_results[c(-1,-5,-6)]
-data <- data.frame( matrix(rf_results[1:2],ncol=2,nrow=1), bart = mean(unlist(results_bart$bart)),matrix(rf_results[3:4],ncol=2,nrow=1))
-colnames(data) <- c("RF No Honesty", "RF Honesty","BART", "RF Sample Split", "RF OOB Honesty")
+data <- data.frame( matrix(rf_results[1:2],ncol=2,nrow=1), matrix(rf_results[3:4],ncol=2,nrow=1))
+colnames(data) <- c("RF No Honesty", "RF Honesty","RF Sample Split", "RF OOB Honesty")
 
 data %>%
   melt() %>%
@@ -321,6 +317,7 @@ data %>%
   geom_point()+
   labs(x = "", y = "Estimated Correlation")+
   geom_hline(yintercept=0, linetype="dashed", color = "blue")+
+  #geom_text(aes(-.5,0,label = "True Correlation", vjust = 1),color = "blue")+
   theme_classic()
 
 ggsave(filename = "figures/oob_honesty.pdf", width = 6,height = 4)
