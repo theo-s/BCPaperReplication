@@ -88,7 +88,7 @@ results$SNR <- ifelse(results$SNR == .5,
                            ifelse(results$SNR == .3,
                                       -1, results$SNR))
 
-# Make figures for bias + Se
+# Make figures for bias 
 plots <- list()
 for (exp in 1:6) {
   results %>%
@@ -127,5 +127,49 @@ grid.arrange(plots[[2]]+theme(legend.position="none")+labs(y = "|Bias|", x = "")
              plots[[5]]+ theme(legend.position="none"),
              plots[[6]]+ theme(legend.position="none"),legend, nrow = 1) -> plot_final
 
-ggsave(plot = plot_final, filename = paste0("figures/prediction_snr_summary.pdf"), height = 4,width = 13)
+ggsave(plot = plot_final, filename = paste0("figures/prediction_snr_bias_summary.pdf"), height = 4,width = 13)
+
+
+
+
+# Make figures for Standard error
+plots <- list()
+for (exp in 1:6) {
+  results %>%
+    mutate(honesty = Estimator %in% c("hon.none","hon.lin","hon.rflin")) %>% 
+    filter(Experiment == exp) %>%
+    dplyr::select(-`|Bias|`) %>%
+    arrange(-SE) %>%
+    melt(id = c("Estimator","Experiment","SNR","honesty")) %>%
+    dplyr::select(-Experiment) %>%
+    # filter(variable == "|Bias|") %>%
+    ggplot(aes(fill = variable, y = value, x = SNR, 
+               color = factor(Estimator, level=level_order),
+               linetype = factor(Estimator, level=level_order)))+
+    geom_line()+
+    scale_linetype_manual(values = rep(c("solid", "dashed"), 3)) +
+    scale_color_manual(values = gplotColours(n=6)) +
+    # facet_wrap(~Experiment)+
+    labs(y = "", x = "")+
+    theme_classic()+
+    ggeasy::easy_add_legend_title("Estimator")+
+    #ggeasy::easy_remove_legend()+
+    scale_x_continuous(breaks=c(-1:3),labels=c('SNR = .3', 
+                                               'SNR = .5', 
+                                               'SNR = 1', 
+                                               'SNR = 2',
+                                               'SNR = 3'))+
+    ggeasy::easy_rotate_x_labels()+
+    ggtitle(paste0("Experiment  ",exp)) -> plot
+  legend <- get_legend(plot)
+  plots[[exp]] <- plot
+}
+
+grid.arrange(plots[[2]]+theme(legend.position="none")+labs(y = "SE", x = ""), 
+             plots[[3]]+ theme(legend.position="none"),
+             plots[[4]]+ theme(legend.position="none"),
+             plots[[5]]+ theme(legend.position="none"),
+             plots[[6]]+ theme(legend.position="none"),legend, nrow = 1) -> plot_final
+
+ggsave(plot = plot_final, filename = paste0("figures/prediction_snr_se_summary.pdf"), height = 4,width = 13)
 

@@ -7,40 +7,43 @@ library(cowplot)
 source("code/prediction_sims/define_experiments_breiman.R")
 exp <- 1
 
-get_results <- function(exp = 1) {
+get_results <- function(exp = 1,snr=0) {
   # Read in the data
   data <- readRDS(paste0("code/prediction_sims/data/Exp",exp,".RDS"))
 
-  preds_1 <- matrix(nrow = 100, ncol = 1e3)
-  preds_2 <- matrix(nrow = 100, ncol = 1e3)
-  preds_3 <- matrix(nrow = 100, ncol = 1e3)
+  all_preds <- list()
+  for (count in 1:6) {
+    all_preds[[count]] = matrix(nrow = 100, ncol = 1e3)
+  }
 
   for (seed in  1:100) {
     # print(seed)
     # Read in the true outcomes
-    res <- readRDS(paste0("code/prediction_sims/results/Exp",exp,"seed",seed,".RDS"))
+    res <- readRDS(paste0("code/prediction_sims/results/Exp",exp,"seed",seed,"snr",snr,".RDS"))
 
     # Save the preds
-    preds_1[seed,] <- res$rf
-    preds_2[seed,] <- res$lin
-    preds_3[seed,] <- res$rflin
+    for (count in 1:6) {
+      all_preds[[count]][seed,] = res[,count]
+    }
   }
 
 
   # Get variance of preds
-  var_1 <- mean(apply(preds_1, MARGIN = 2, FUN = sd))
-  var_2 <- mean(apply(preds_2, MARGIN = 2, FUN = sd))
-  var_3 <- mean(apply(preds_3, MARGIN = 2, FUN = sd))
+  all_vars <- list()
+  for (count in 1:6) {
+    all_vars[[count]] = mean(apply(all_preds[[count]], MARGIN = 2, FUN = sd))
+  }
 
   # Get biases
-  bias_1 <- mean(abs(apply(preds_1, MARGIN = 2, FUN = mean) - data$y_true))
-  bias_2 <- mean(abs(apply(preds_2, MARGIN = 2, FUN = mean) - data$y_true))
-  bias_3 <- mean(abs(apply(preds_3, MARGIN = 2, FUN = mean) - data$y_true))
+  all_bias <- list()
+  for (count in 1:6) {
+    all_bias[[count]] = mean(abs(apply(all_preds[[count]], MARGIN = 2, FUN = mean) - data$y_true))
+  }
 
-  return(data.frame(Exp = rep(exp, 3),
-                    Es = c("none.none", "none.ols", "rf.ols"),
-                    Var = c(var_1,var_2,var_3),
-                    Bias = c(bias_1,bias_2,bias_3)))
+  return(data.frame(Exp = rep(exp, 6),
+                    Es = c("hon.none","hon.lin","hon.rflin","std.none","std.lin","std.rflin"),
+                    Var = unlist(all_vars),
+                    Bias = unlist(all_bias)))
 }
 
 
@@ -51,7 +54,7 @@ for (i in 1:6) {
   cur_res <- get_results(i)
   results <- rbind(results,cur_res)
 }
-results$Es <- ifelse(results$Es == "none.none", "no correction",results$Es)
+
 colnames(results) <- c("Experiment", "Estimator", "SE","|Bias|")
 
 #results[,2] <- rep(c("None","linear BC", "linear + nonlinear BC"),max(results[,1]))
@@ -69,6 +72,8 @@ results_var %>%
 xtable(results_bias, caption = "|Bias| for estimators across all experiments")
 xtable(results_var, caption = "SE for estimators across all experiments")
 
+level_order <- c("std.none", "hon.none", "std.lin",
+                 "hon.lin", "std.rflin","hon.rflin") 
 
 # Make figures for bias + Se
 plots <- list()
@@ -80,8 +85,11 @@ for (exp in 1:6) {
     melt(id = c("Estimator","Experiment")) %>%
     dplyr::select(-Experiment) %>%
     # filter(variable == "|Bias|") %>%
-    ggplot(aes(fill = variable, y = value, x = Estimator))+
-    geom_point()+
+    ggplot(aes(fill = variable, y = value, x = factor(Estimator, level=level_order),alpha = Estimator %in% c("hon.none",
+                                                                                                             "hon.lin",
+                                                                                                             "hon.rflin")))+
+    geom_point(size=2)+
+    scale_alpha_manual(values = c(1, 0.5), guide = FALSE)+
     # facet_wrap(~Experiment)+
     labs(y = "", x = "")+
     theme_classic()+
