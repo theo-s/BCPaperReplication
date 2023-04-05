@@ -60,7 +60,8 @@ GeneralCorrectedPredict <- function(object,
     # Fit a honest random forest on the training predictions + outcomes and
     # then predict on Xtest
     fit <- forestry(x = data.frame(V1 = Ytrain_pred),
-                    y = Ytrain)
+                    y = Ytrain,
+                    OOBhonest = TRUE)
     data_test$Ypred_corrected <- predict(fit,
                                          newdata = data.frame(V1 = data_test$Ypred))
     data_train$Ypred_corrected <- predict(fit,

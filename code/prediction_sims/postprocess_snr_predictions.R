@@ -1,5 +1,6 @@
 library(xtable)
 library(dplyr)
+library(ggplot2)
 library(reshape)
 library(tidyr)
 library(gridExtra)
@@ -102,9 +103,11 @@ for (exp in 1:6) {
     ggplot(aes(fill = variable, y = value, x = SNR, 
                color = factor(Estimator, level=level_order),
                linetype = factor(Estimator, level=level_order)))+
-    geom_line()+
+    geom_line(linewidth = 1)+
     scale_linetype_manual(values = rep(c("solid", "dashed"), 3)) +
-    scale_color_manual(values = gplotColours(n=6)) +
+    scale_color_manual(values = c(rep(c("black"),2),
+                                  rep(c("blue"),2),
+                                  rep(c("green"),2)))+
     # facet_wrap(~Experiment)+
     labs(y = "", x = "")+
     theme_classic()+
@@ -146,9 +149,11 @@ for (exp in 1:6) {
     ggplot(aes(fill = variable, y = value, x = SNR, 
                color = factor(Estimator, level=level_order),
                linetype = factor(Estimator, level=level_order)))+
-    geom_line()+
+    geom_line(linewidth = 1)+
     scale_linetype_manual(values = rep(c("solid", "dashed"), 3)) +
-    scale_color_manual(values = gplotColours(n=6)) +
+    scale_color_manual(values = c(rep(c("black"),2),
+                                  rep(c("blue"),2),
+                                  rep(c("green"),2)))+
     # facet_wrap(~Experiment)+
     labs(y = "", x = "")+
     theme_classic()+

@@ -7,5 +7,5 @@ do
   Rscript code/prediction_sims/run_simul.R --seed "$seed"
 done
 
-echo All bart Exp1 done
+echo All RF Sims done
 

@@ -16,7 +16,7 @@ experiment_list[["Exp1"]] <- list(
     y_true <- 25*exp(-.5*r^2)
     return(list("x" = x, "r" = r, "y_true" = y_true))
   },
-  Yfun <- function(data, seed){
+  Yfun <- function(data, seed, snr=1){
     r <- data$r
     return(25*exp(-.5*r^2))
   }
@@ -32,11 +32,16 @@ experiment_list[["Exp2"]] <- list(
     y_true <- 10*sin(pi*x[,1]*x[,2]) + 20*(x[,3] - .5)^2 + 10*x[,4] + 5*x[,5]
     return(list("x" = x, "y_true" = y_true))
   },
-  Yfun <- function(data, seed) {
+  Yfun <- function(data, seed, snr=24) {
     X <- data$x
     set.seed(seed)
 
-    y <- 10*sin(pi*X[,1]*X[,2]) + 20*(X[,3] - .5)^2 + 10*X[,4] + 5*X[,5] + rnorm(n, sd = 1)
+    y <- 10*sin(pi*X[,1]*X[,2]) + 20*(X[,3] - .5)^2 + 10*X[,4] + 5*X[,5]
+
+    noise <- rnorm(length(y))
+    ratio <- sqrt(var(y)/(snr*var(noise)))
+
+    y <- y + ratio * noise
     return(y)
   }
 )
@@ -55,13 +60,13 @@ experiment_list[["Exp3"]] <- list(
     y_true <- x[, 1] ^ 2 + (x[, 2] * x[, 3] - (1 / (x[, 2] * x[, 3])) ^ 2) ^ (.5)
     return(list("x" = x, "y_true" = y_true))
   },
-  Yfun <- function(data, seed) {
+  Yfun <- function(data, seed,snr=3) {
     X <- data$x
     set.seed(seed)
     y <- X[, 1] ^ 2 + (X[, 2] * X[, 3] - (1 / (X[, 2] * X[, 3])) ^ 2) ^ (.5)
 
     noise <- rnorm(length(y))
-    ratio <- sqrt(var(y)/(3*var(noise)))
+    ratio <- sqrt(var(y)/(snr*var(noise)))
     y <- y + ratio * noise
     return(y)
   }
@@ -81,14 +86,14 @@ experiment_list[["Exp4"]] <- list(
     y_true <- atan( (x[,2]*x[,3] - (1/(x[,2]*x[,4]) )) / x[,1])
     return(list("x" = x,"y_true" = y_true))
   },
-  Yfun <- function(data, seed) {
+  Yfun <- function(data, seed, snr=3) {
     X <- data$x
     set.seed(seed)
 
     y <- atan( (X[,2]*X[,3] - (1/(X[,2]*X[,4]) )) / X[,1])
 
     noise <- rnorm(length(y))
-    ratio <- sqrt(var(y)/(3*var(noise)))
+    ratio <- sqrt(var(y)/(snr*var(noise)))
     y <- y + ratio * noise
     return(y)
   }
@@ -99,17 +104,34 @@ experiment_list[["Exp5"]] <- list(
   Xfun <- function(n, seed){
     set.seed(seed)
     x <- matrix(rnorm(n*100), ncol = 100)
-    beta <- runif(100)
+    beta <- c(
+      c(0.09873424, 0.46945549, 0.28703703, 0.26507412, 0.88071903,
+        0.58478414, 0.48429319, 0.07180815, 0.62477804, 0.02620922,
+        0.53150494, 0.41295260, 0.08861640, 0.72412665, 0.91862325,
+        0.3063318, 0.42222575, 0.14834474, 0.42306006, 0.77476412),
+        rep(0,80)
+    )
 
-    y_true <- as.matrix(x) %*% beta
+    y_true <- as.vector(as.matrix(x) %*% beta)
     return(list("x" = x, "y_true" = y_true))
   },
-  Yfun <- function(data, seed) {
+  Yfun <- function(data, seed,snr=3) {
     X <- data$x
     set.seed(seed)
 
-    y <- atan( (X[,2]*X[,3] - (1/(X[,2]*X[,4]) )) / X[,1])
-    y <- y + rnorm(length(y), sd = sd(y))
+    beta <- c(
+      c(0.09873424, 0.46945549, 0.28703703, 0.26507412, 0.88071903,
+        0.58478414, 0.48429319, 0.07180815, 0.62477804, 0.02620922,
+        0.53150494, 0.41295260, 0.08861640, 0.72412665, 0.91862325,
+        0.3063318, 0.42222575, 0.14834474, 0.42306006, 0.77476412),
+      rep(0,80)
+    )
+
+    y <- as.vector(as.matrix(X) %*% beta)
+
+    noise <- rnorm(length(y))
+    ratio <- sqrt(var(y)/(snr*var(noise)))
+    y <- y + ratio * noise
     return(y)
   }
 )
@@ -124,9 +146,13 @@ experiment_list[["Exp6"]] <- list(
 
     return(list("x" = data_test, "y_true" = y_true))
   },
-  Yfun <- function(data, seed) {
-    data <- data$x
-    y <- sin(data[,1]*2*pi) + rnorm(n = nrow(data), sd = .5*sd(data[,ncol(data)]))
+  Yfun <- function(data, seed, snr=2) {
+    X <- data$x
+    y <- sin(X[,1]*2*pi)
+
+    noise <- rnorm(length(y))
+    ratio <- sqrt(var(y)/(snr*var(noise)))
+    y <- y + ratio * noise
     return(y)
   }
 )
